@@ -6,15 +6,15 @@ import (
 )
 
 type Publications struct {
-	ID        int `gorm:"primaryKey"`
+	ID        uint64 `gorm:"primaryKey"`
 	Title     string `gorm:"size:1000;not null" validate:"required,min=2,max=1000"`
 	Abstract  string `gorm:"size:1000;"`
 	Content   string `gorm:"type:text;not null" validate:"required,min=2"`
-	CreatedAt time.Time `gorm:"autoCreateTime"`
-	UpdatedAt time.Time `gorm:"autoCreateTime"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
-func CreatePublication(pub *Publications) (error) {
+func CreatePublication(pub *Publications) error {
 	result := DB.Create(pub)
 	if result.Error != nil {
 		return result.Error
@@ -22,7 +22,7 @@ func CreatePublication(pub *Publications) (error) {
 	return nil
 }
 
-func DeletePublicationByID(ID int) (error) {
+func DeletePublicationByID(ID int) error {
 	result := DB.Delete(new(Publications), ID)
 	if result.Error != nil {
 		return result.Error
@@ -33,7 +33,7 @@ func DeletePublicationByID(ID int) (error) {
 	return nil
 }
 
-func UpdatePublicationByID(ID int, updPub *Publications) (error) {
+func UpdatePublicationByID(ID int, updPub *Publications) error {
 	result := DB.Model(new(Publications)).Where("id = ?", ID).Updates(updPub)
 	if result.Error != nil {
 		return result.Error

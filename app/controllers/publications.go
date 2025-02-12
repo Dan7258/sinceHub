@@ -63,29 +63,29 @@ func (p Publications) DeletePublicationByID(id int) revel.Result {
 }
 
 func (p Publications) UpdatePublicationByID(id int) revel.Result {
-	publication := new(models.Publications)
-	err := p.Params.BindJSON(publication)
+	pub := new(models.Publications)
+	err := p.Params.BindJSON(pub)
 	if err != nil {
 		p.Response.Status = http.StatusBadRequest
 		return p.RenderJSON(map[string]string{"error" : err.Error()})
 	}
 
-	if publication.Title != "" && len(publication.Title) < 2 {
+	if pub.Title != "" && len(pub.Title) < 2 {
 		p.Response.Status = http.StatusUnprocessableEntity
 		return p.RenderJSON(map[string]string{"error": "Заголовок слишком короткий!"})
 	}
 
-	if publication.Content != "" && len(publication.Content) < 2 {
+	if pub.Content != "" && len(pub.Content) < 2 {
 		p.Response.Status = http.StatusUnprocessableEntity
 		return p.RenderJSON(map[string]string{"error": "В статье мало текста!"})
 	}
 
-	if publication.Abstract != "" && len(publication.Abstract) < 2 {
+	if pub.Abstract != "" && len(pub.Abstract) < 2 {
 		p.Response.Status = http.StatusUnprocessableEntity
 		return p.RenderJSON(map[string]string{"error": "Краткое сведение слишком краткое!"})
 	}
 
-	err = models.UpdatePublicationByID(id, publication)
+	err = models.UpdatePublicationByID(id, pub)
 
 	if err != nil {
 		p.Response.Status = http.StatusInternalServerError
@@ -97,11 +97,11 @@ func (p Publications) UpdatePublicationByID(id int) revel.Result {
 }
 
 func (p Publications) GetAllPublications() revel.Result {
-	Publications, err := models.GetAllPublications()
+	pub, err := models.GetAllPublications()
 	if err != nil {
 		p.Response.Status = http.StatusInternalServerError
 		return p.RenderJSON(map[string]string{"error": err.Error()})
 	}
 	p.Response.Status = http.StatusOK
-	return p.RenderJSON(Publications)
+	return p.RenderJSON(pub)
 }

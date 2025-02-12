@@ -20,6 +20,15 @@ POST    /publications                           Publications.CreatePublication
 DELETE  /publications/id/:id                    Publications.DeletePublicationByID
 PATCH   /publications/id/:id                    Publications.UpdatePublicationByID
 
+GET     /profiles/id/:id                        Profiles.GetProfileByID
+GET     /profiles/login/:login                  Profiles.GetProfileByLogin
+GET     /profiles                               Profiles.GetAllProfiles
+POST    /profiles                               Profiles.CreateProfile
+DELETE  /profiles/id/:id                        Profiles.DeleteProfileByID
+DELETE  /profiles/login/:login                  Profiles.DeleteProfileByLogin
+PATCH   /profiles/id/:id                        Profiles.UpdateProfileByID
+PATCH   /profiles/login/:login                  Profiles.UpdateProfileByLogin
+
 # Ignore favicon requests
 GET     /favicon.ico                            404
 

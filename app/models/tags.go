@@ -5,17 +5,17 @@ import (
 )
 
 type Tags struct {
-	ID int `gorm:"primaryKey"`
+	ID   uint64 `gorm:"primaryKey"`
 	Name string `gorm:"size:1000;not null" validate:"required,min=2,max=1000"`
 }
 
-func CreateTag(name string) (error) {
+func CreateTag(name string) error {
 	tag := new(Tags)
 	tag.Name = name
 	result := DB.Create(tag)
-	if(result.Error != nil) {
+	if result.Error != nil {
 		return result.Error
-	} 
+	}
 	return nil
 }
 
@@ -24,7 +24,7 @@ func GetTagByID(ID int) (*Tags, error) {
 	result := DB.First(tag, ID)
 	if result.Error != nil {
 		return nil, result.Error
-	} 
+	}
 	return tag, nil
 }
 
@@ -33,11 +33,11 @@ func GetTagByName(name string) (*Tags, error) {
 	result := DB.Where("name = ?", name).First(tag)
 	if result.Error != nil {
 		return nil, result.Error
-	} 
+	}
 	return tag, nil
 }
 
-func DeleteTagByID(ID int) (error) {
+func DeleteTagByID(ID int) error {
 	tag := new(Tags)
 	result := DB.Delete(tag, ID)
 	if result.Error != nil {
@@ -49,7 +49,7 @@ func DeleteTagByID(ID int) (error) {
 	return nil
 }
 
-func UpdateTagByID(ID int, updTag *Tags) (error) {
+func UpdateTagByID(ID int, updTag *Tags) error {
 	tag := new(Tags)
 	result := DB.Model(tag).Where("id = ?", ID).Update("name", updTag.Name)
 	if result.Error != nil {
@@ -69,5 +69,3 @@ func GetAllTags() ([]Tags, error) {
 	}
 	return tags, nil
 }
-
-
