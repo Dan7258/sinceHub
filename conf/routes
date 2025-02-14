@@ -11,13 +11,17 @@ GET     /tags/id/:id                            Tags.GetTagByID
 GET     /tags/name/:name                        Tags.GetTagByName
 GET     /tags                                   Tags.GetAllTags
 POST    /tags                                   Tags.CreateTag
+POST    /tags/:id/publications                  Tags.AddPublicationsToTag
 DELETE  /tags/id/:id                            Tags.DeleteTagByID
+DELETE  /tags/:id/publications                  Tags.DeletePublicationsFromTag
 PATCH   /tags/id/:id                            Tags.UpdateTagByID
 
 GET     /publications/id/:id                    Publications.GetPublicationByID
 GET     /publications                           Publications.GetAllPublications
 POST    /publications                           Publications.CreatePublication
+POST    /publications/:id/tags                  Publications.AddTagsToPublication
 DELETE  /publications/id/:id                    Publications.DeletePublicationByID
+DELETE  /publications/:id/tags                  Publications.DeleteTagsFromPublication
 PATCH   /publications/id/:id                    Publications.UpdatePublicationByID
 
 GET     /profiles/id/:id                        Profiles.GetProfileByID

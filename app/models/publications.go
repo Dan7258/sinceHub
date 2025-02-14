@@ -12,6 +12,7 @@ type Publications struct {
 	Content   string `gorm:"type:text;not null" validate:"required,min=2"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
+	Tags      []Tags `gorm:"many2many:publication_tags;"`
 }
 
 func CreatePublication(pub *Publications) error {
@@ -44,9 +45,9 @@ func UpdatePublicationByID(ID int, updPub *Publications) error {
 	return nil
 }
 
-func GetPublicationByID(ID int) (*Publications, error) {
+func GetPublicationByID(ID uint64) (*Publications, error) {
 	pub := new(Publications)
-	result := DB.First(pub, ID)
+	result := DB.Preload("Tags").First(pub, ID)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -55,9 +56,45 @@ func GetPublicationByID(ID int) (*Publications, error) {
 
 func GetAllPublications() ([]Publications, error) {
 	var pub []Publications
-	result := DB.Find(&pub)
+	result := DB.Preload("Tags").Find(&pub)
 	if result.Error != nil {
 		return nil, result.Error
 	}
 	return pub, nil
+}
+
+func AddTagsToPublication(ID uint64, tagIDs []uint64) error {
+	pub := new(Publications)
+	var tags []Tags
+	result := DB.First(pub, ID)
+	if result.Error != nil {
+		return result.Error
+	}
+	result = DB.Find(&tags, tagIDs)
+	if result.Error != nil {
+		return result.Error
+	}
+	err := DB.Model(pub).Association("Tags").Append(tags)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func DeleteTagsFromPublication(ID uint64, tagIDs []uint64) error {
+	pub := new(Publications)
+	var tags []Tags
+	result := DB.First(pub, ID)
+	if result.Error != nil {
+		return result.Error
+	}
+	result = DB.Find(&tags, tagIDs)
+	if result.Error != nil {
+		return result.Error
+	}
+	err := DB.Model(pub).Association("Tags").Delete(tags)
+	if err != nil {
+		return err
+	}
+	return nil
 }

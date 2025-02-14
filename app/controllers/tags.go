@@ -1,10 +1,10 @@
 package controllers
 
 import (
-	"net/http"
-	"sinceHub/app/models"
 	"github.com/go-playground/validator/v10"
 	"github.com/revel/revel"
+	"net/http"
+	"sinceHub/app/models"
 )
 
 type Tags struct {
@@ -16,7 +16,7 @@ func (t Tags) CreateTag() revel.Result {
 	err := t.Params.BindJSON(&tag)
 	if err != nil {
 		t.Response.Status = http.StatusBadRequest
-		return t.RenderJSON(map[string]string{"error" : err.Error()})
+		return t.RenderJSON(map[string]string{"error": err.Error()})
 	}
 
 	validate := validator.New()
@@ -73,7 +73,7 @@ func (t Tags) UpdateTagByID(id int) revel.Result {
 	err := t.Params.BindJSON(&tag)
 	if err != nil {
 		t.Response.Status = http.StatusBadRequest
-		return t.RenderJSON(map[string]string{"error" : err.Error()})
+		return t.RenderJSON(map[string]string{"error": err.Error()})
 	}
 
 	validate := validator.New()
@@ -102,4 +102,36 @@ func (t Tags) GetAllTags() revel.Result {
 	}
 	t.Response.Status = http.StatusOK
 	return t.RenderJSON(tags)
+}
+
+func (t Tags) AddPublicationsToTag(id uint64) revel.Result {
+	var pubIDs []uint64
+	err := t.Params.BindJSON(&pubIDs)
+	if err != nil {
+		t.Response.Status = http.StatusBadRequest
+		return t.RenderJSON(map[string]string{"error": err.Error()})
+	}
+	err = models.AddPublicationsToTag(id, pubIDs)
+	if err != nil {
+		t.Response.Status = http.StatusInternalServerError
+		return t.RenderJSON(map[string]string{"error": err.Error()})
+	}
+	t.Response.Status = http.StatusNoContent
+	return t.RenderJSON(map[string]int{"status": http.StatusNoContent})
+}
+
+func (t Tags) DeletePublicationsFromTag(id uint64) revel.Result {
+	var pubIDs []uint64
+	err := t.Params.BindJSON(&pubIDs)
+	if err != nil {
+		t.Response.Status = http.StatusBadRequest
+		return t.RenderJSON(map[string]string{"error": err.Error()})
+	}
+	err = models.DeletePublicationsFromTag(id, pubIDs)
+	if err != nil {
+		t.Response.Status = http.StatusInternalServerError
+		return t.RenderJSON(map[string]string{"error": err.Error()})
+	}
+	t.Response.Status = http.StatusNoContent
+	return t.RenderJSON(map[string]int{"status": http.StatusNoContent})
 }

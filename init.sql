@@ -1,19 +1,19 @@
-CREATE TABLE Profiles (
+CREATE TABLE profiles (
     id SERIAL PRIMARY KEY,
-    login VARCHAR(1000) NOT NULL,
+    login VARCHAR(1000) UNIQUE NOT NULL,
     password VARCHAR(1000) NOT NULL,
-    first_name VARCHAR(1000) NOT NULL,
+    first_Name VARCHAR(1000) NOT NULL,
     last_name VARCHAR(1000) NOT NULL,
     middle_name VARCHAR(1000),
-    country VARCHAR(100),
+    Country VARCHAR(100),
     academic_degree VARCHAR(1000),
-    vac VARCHAR(1000),
+    VAC VARCHAR(1000),
     appointment VARCHAR(1000),
     subscribers INTEGER,
     my_subscribes INTEGER
 );
 
-CREATE TABLE Publications (
+CREATE TABLE publications (
     id SERIAL PRIMARY KEY,
     title VARCHAR(1000) NOT NULL,
     abstract VARCHAR(1000),
@@ -35,16 +35,16 @@ CREATE TABLE friend_requests (
     created_at DATE NOT NULL
 );
 
-CREATE TABLE Pubication_Tags (
-    publication_id INTEGER REFERENCES Publications(id),
-    tag_id INTEGER REFERENCES tags(id),
-    PRIMARY KEY (publication_id, tag_id)
+CREATE TABLE publication_tags (
+    publications_id INTEGER REFERENCES publications(id),
+    tags_id INTEGER REFERENCES tags(id),
+    PRIMARY KEY (publications_id, tags_id)
 );
 
-CREATE TABLE Profile_Publication (
-    profile_id INTEGER REFERENCES Profiles(id),
-    publication_id INTEGER REFERENCES Publications(id),
-    PRIMARY KEY (profile_id, publication_id)
+CREATE TABLE profile_publications (
+    profiles_id INTEGER REFERENCES profiles(id),
+    publications_id INTEGER REFERENCES publications(id),
+    PRIMARY KEY (profiles_id, publications_id)
 );
 
 CREATE TABLE subscribs (

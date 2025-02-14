@@ -1,11 +1,10 @@
 package controllers
 
 import (
-	"net/http"
-	"sinceHub/app/models"
-
 	"github.com/go-playground/validator/v10"
 	"github.com/revel/revel"
+	"net/http"
+	"sinceHub/app/models"
 )
 
 type Publications struct {
@@ -17,7 +16,7 @@ func (p Publications) CreatePublication() revel.Result {
 	err := p.Params.BindJSON(pub)
 	if err != nil {
 		p.Response.Status = http.StatusBadRequest
-		return p.RenderJSON(map[string]string{"error" : err.Error()})
+		return p.RenderJSON(map[string]string{"error": err.Error()})
 	}
 
 	if pub.Abstract != "" && len(pub.Abstract) < 2 {
@@ -42,7 +41,7 @@ func (p Publications) CreatePublication() revel.Result {
 	return p.RenderJSON(map[string]int{"status": http.StatusCreated})
 }
 
-func (p Publications) GetPublicationByID(id int) revel.Result {
+func (p Publications) GetPublicationByID(id uint64) revel.Result {
 	pub, err := models.GetPublicationByID(id)
 	if err != nil {
 		p.Response.Status = http.StatusNotFound
@@ -67,7 +66,7 @@ func (p Publications) UpdatePublicationByID(id int) revel.Result {
 	err := p.Params.BindJSON(pub)
 	if err != nil {
 		p.Response.Status = http.StatusBadRequest
-		return p.RenderJSON(map[string]string{"error" : err.Error()})
+		return p.RenderJSON(map[string]string{"error": err.Error()})
 	}
 
 	if pub.Title != "" && len(pub.Title) < 2 {
@@ -104,4 +103,36 @@ func (p Publications) GetAllPublications() revel.Result {
 	}
 	p.Response.Status = http.StatusOK
 	return p.RenderJSON(pub)
+}
+
+func (p Publications) AddTagsToPublication(id uint64) revel.Result {
+	var tagIDs []uint64
+	err := p.Params.BindJSON(&tagIDs)
+	if err != nil {
+		p.Response.Status = http.StatusBadRequest
+		return p.RenderJSON(map[string]string{"error": err.Error()})
+	}
+	err = models.AddTagsToPublication(id, tagIDs)
+	if err != nil {
+		p.Response.Status = http.StatusInternalServerError
+		return p.RenderJSON(map[string]string{"error": err.Error()})
+	}
+	p.Response.Status = http.StatusNoContent
+	return p.RenderJSON(map[string]int{"status": http.StatusNoContent})
+}
+
+func (p Publications) DeleteTagsFromPublication(id uint64) revel.Result {
+	var tagIDs []uint64
+	err := p.Params.BindJSON(&tagIDs)
+	if err != nil {
+		p.Response.Status = http.StatusBadRequest
+		return p.RenderJSON(map[string]string{"error": err.Error()})
+	}
+	err = models.DeleteTagsFromPublication(id, tagIDs)
+	if err != nil {
+		p.Response.Status = http.StatusInternalServerError
+		return p.RenderJSON(map[string]string{"error": err.Error()})
+	}
+	p.Response.Status = http.StatusNoContent
+	return p.RenderJSON(map[string]int{"status": http.StatusNoContent})
 }
