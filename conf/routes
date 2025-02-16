@@ -20,16 +20,20 @@ GET     /publications/id/:id                    Publications.GetPublicationByID
 GET     /publications                           Publications.GetAllPublications
 POST    /publications                           Publications.CreatePublication
 POST    /publications/:id/tags                  Publications.AddTagsToPublication
+POST    /publications/:id/profiles              Publications.AddProfilesToPublication
 DELETE  /publications/id/:id                    Publications.DeletePublicationByID
 DELETE  /publications/:id/tags                  Publications.DeleteTagsFromPublication
+DELETE  /publications/:id/profiles              Publications.DeleteProfilesFromPublication
 PATCH   /publications/id/:id                    Publications.UpdatePublicationByID
 
 GET     /profiles/id/:id                        Profiles.GetProfileByID
 GET     /profiles/login/:login                  Profiles.GetProfileByLogin
 GET     /profiles                               Profiles.GetAllProfiles
 POST    /profiles                               Profiles.CreateProfile
+POST    /profiles/:id/publications              Profiles.AddPublicationsToProfile
 DELETE  /profiles/id/:id                        Profiles.DeleteProfileByID
 DELETE  /profiles/login/:login                  Profiles.DeleteProfileByLogin
+DELETE  /profiles/:id/publications              Profiles.DeletePublicationsFromProfile
 PATCH   /profiles/id/:id                        Profiles.UpdateProfileByID
 PATCH   /profiles/login/:login                  Profiles.UpdateProfileByLogin
 

@@ -5,9 +5,9 @@ import (
 )
 
 type Tags struct {
-	ID           uint64         `gorm:"primaryKey"`
-	Name         string         `gorm:"size:1000;not null" validate:"required,min=2,max=1000"`
-	Publications []Publications `gorm:"many2many:publication_tags;"`
+	ID           uint64         `json:"id" gorm:"primaryKey"`
+	Name         string         `json:"name" gorm:"size:1000;not null" validate:"required,min=2,max=1000"`
+	Publications []Publications `json:"publications" gorm:"many2many:publication_tags;"`
 }
 
 func CreateTag(name string) error {

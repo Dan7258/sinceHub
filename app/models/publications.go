@@ -6,13 +6,14 @@ import (
 )
 
 type Publications struct {
-	ID        uint64 `gorm:"primaryKey"`
-	Title     string `gorm:"size:1000;not null" validate:"required,min=2,max=1000"`
-	Abstract  string `gorm:"size:1000;"`
-	Content   string `gorm:"type:text;not null" validate:"required,min=2"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	Tags      []Tags `gorm:"many2many:publication_tags;"`
+	ID        uint64     `json:"id" gorm:"primaryKey"`
+	Title     string     `json:"title" gorm:"size:1000;not null" validate:"required,min=2,max=1000"`
+	Abstract  string     `json:"abstract" gorm:"size:1000;"`
+	Content   string     `json:"content" gorm:"type:text;not null" validate:"required,min=2"`
+	CreatedAt time.Time  `json:"created_at"`
+	UpdatedAt time.Time  `json:"updated_at"`
+	Profiles  []Profiles `json:"profiles" gorm:"many2many:profile_publications;"`
+	Tags      []Tags     `json:"tags" gorm:"many2many:publication_tags;"`
 }
 
 func CreatePublication(pub *Publications) error {
@@ -47,7 +48,7 @@ func UpdatePublicationByID(ID int, updPub *Publications) error {
 
 func GetPublicationByID(ID uint64) (*Publications, error) {
 	pub := new(Publications)
-	result := DB.Preload("Tags").First(pub, ID)
+	result := DB.Preload("Tags").Preload("Profiles").First(pub, ID)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -56,7 +57,7 @@ func GetPublicationByID(ID uint64) (*Publications, error) {
 
 func GetAllPublications() ([]Publications, error) {
 	var pub []Publications
-	result := DB.Preload("Tags").Find(&pub)
+	result := DB.Preload("Tags").Preload("Profiles").Find(&pub)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -93,6 +94,42 @@ func DeleteTagsFromPublication(ID uint64, tagIDs []uint64) error {
 		return result.Error
 	}
 	err := DB.Model(pub).Association("Tags").Delete(tags)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func AddProfilesToPublication(ID uint64, profileIDs []uint64) error {
+	pub := new(Publications)
+	var profiles []Profiles
+	result := DB.First(pub, ID)
+	if result.Error != nil {
+		return result.Error
+	}
+	result = DB.Find(&profiles, profileIDs)
+	if result.Error != nil {
+		return result.Error
+	}
+	err := DB.Model(pub).Association("Profiles").Append(profiles)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func DeleteProfilesFromPublication(ID uint64, profileIDs []uint64) error {
+	pub := new(Publications)
+	var profiles []Profiles
+	result := DB.First(pub, ID)
+	if result.Error != nil {
+		return result.Error
+	}
+	result = DB.Find(&profiles, profileIDs)
+	if result.Error != nil {
+		return result.Error
+	}
+	err := DB.Model(pub).Association("Profiles").Delete(profiles)
 	if err != nil {
 		return err
 	}

@@ -18,7 +18,7 @@ func (p Profiles) CreateProfile() revel.Result {
 	err := p.Params.BindJSON(profile)
 	if err != nil {
 		p.Response.Status = http.StatusBadRequest
-		return p.RenderJSON(map[string]string{"error" : err.Error()})
+		return p.RenderJSON(map[string]string{"error": err.Error()})
 	}
 	fmt.Println(profile)
 
@@ -85,7 +85,7 @@ func (p Profiles) UpdateProfileByID(id int) revel.Result {
 	err := p.Params.BindJSON(profile)
 	if err != nil {
 		p.Response.Status = http.StatusBadRequest
-		return p.RenderJSON(map[string]string{"error" : err.Error()})
+		return p.RenderJSON(map[string]string{"error": err.Error()})
 	}
 
 	err = models.UpdateProfileByID(id, profile)
@@ -104,7 +104,7 @@ func (p Profiles) UpdateProfileByLogin(login string) revel.Result {
 	err := p.Params.BindJSON(profile)
 	if err != nil {
 		p.Response.Status = http.StatusBadRequest
-		return p.RenderJSON(map[string]string{"error" : err.Error()})
+		return p.RenderJSON(map[string]string{"error": err.Error()})
 	}
 
 	err = models.UpdateProfileByLogin(login, profile)
@@ -126,4 +126,36 @@ func (p Profiles) GetAllProfiles() revel.Result {
 	}
 	p.Response.Status = http.StatusOK
 	return p.RenderJSON(Profiles)
+}
+
+func (p Profiles) AddPublicationsToProfile(id uint64) revel.Result {
+	var pubIDs []uint64
+	err := p.Params.BindJSON(&pubIDs)
+	if err != nil {
+		p.Response.Status = http.StatusBadRequest
+		return p.RenderJSON(map[string]string{"error": err.Error()})
+	}
+	err = models.AddPublicationsToProfile(id, pubIDs)
+	if err != nil {
+		p.Response.Status = http.StatusInternalServerError
+		return p.RenderJSON(map[string]string{"error": err.Error()})
+	}
+	p.Response.Status = http.StatusNoContent
+	return p.RenderJSON(map[string]int{"status": http.StatusNoContent})
+}
+
+func (p Profiles) DeletePublicationsFromProfile(id uint64) revel.Result {
+	var pubIDs []uint64
+	err := p.Params.BindJSON(&pubIDs)
+	if err != nil {
+		p.Response.Status = http.StatusBadRequest
+		return p.RenderJSON(map[string]string{"error": err.Error()})
+	}
+	err = models.DeletePublicationsFromProfile(id, pubIDs)
+	if err != nil {
+		p.Response.Status = http.StatusInternalServerError
+		return p.RenderJSON(map[string]string{"error": err.Error()})
+	}
+	p.Response.Status = http.StatusNoContent
+	return p.RenderJSON(map[string]int{"status": http.StatusNoContent})
 }
