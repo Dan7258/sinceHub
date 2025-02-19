@@ -18,11 +18,6 @@ func (p Publications) CreatePublication() revel.Result {
 		p.Response.Status = http.StatusBadRequest
 		return p.RenderJSON(map[string]string{"error": err.Error()})
 	}
-
-	if pub.Abstract != "" && len(pub.Abstract) < 2 {
-		p.Response.Status = http.StatusUnprocessableEntity
-		return p.RenderJSON(map[string]string{"error": "Краткое сведение слишком краткое!"})
-	}
 	validate := validator.New()
 	err = validate.Struct(pub)
 	if err != nil {
@@ -69,19 +64,11 @@ func (p Publications) UpdatePublicationByID(id int) revel.Result {
 		return p.RenderJSON(map[string]string{"error": err.Error()})
 	}
 
-	if pub.Title != "" && len(pub.Title) < 2 {
+	validate := validator.New()
+	err = validate.Struct(pub)
+	if err != nil {
 		p.Response.Status = http.StatusUnprocessableEntity
-		return p.RenderJSON(map[string]string{"error": "Заголовок слишком короткий!"})
-	}
-
-	if pub.Content != "" && len(pub.Content) < 2 {
-		p.Response.Status = http.StatusUnprocessableEntity
-		return p.RenderJSON(map[string]string{"error": "В статье мало текста!"})
-	}
-
-	if pub.Abstract != "" && len(pub.Abstract) < 2 {
-		p.Response.Status = http.StatusUnprocessableEntity
-		return p.RenderJSON(map[string]string{"error": "Краткое сведение слишком краткое!"})
+		return p.RenderJSON(map[string]string{"error": err.Error()})
 	}
 
 	err = models.UpdatePublicationByID(id, pub)

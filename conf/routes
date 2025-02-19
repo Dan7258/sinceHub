@@ -31,9 +31,11 @@ GET     /profiles/login/:login                  Profiles.GetProfileByLogin
 GET     /profiles                               Profiles.GetAllProfiles
 POST    /profiles                               Profiles.CreateProfile
 POST    /profiles/:id/publications              Profiles.AddPublicationsToProfile
+POST    /profiles/:id/subscribers               Profiles.AddSubscribersToProfile
 DELETE  /profiles/id/:id                        Profiles.DeleteProfileByID
 DELETE  /profiles/login/:login                  Profiles.DeleteProfileByLogin
 DELETE  /profiles/:id/publications              Profiles.DeletePublicationsFromProfile
+DELETE  /profiles/:id/subscribers               Profiles.DeleteSubscribersFromProfile
 PATCH   /profiles/id/:id                        Profiles.UpdateProfileByID
 PATCH   /profiles/login/:login                  Profiles.UpdateProfileByLogin
 

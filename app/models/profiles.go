@@ -3,19 +3,19 @@ package models
 import "fmt"
 
 type Profiles struct {
-	ID             uint64         `json:"id" gorm:"primaryKey"`
-	Login          string         `json:"login" gorm:"size:1000;not null;unique" validate:"required,min=4,max=1000"`
-	Password       string         `json:"password" gorm:"size:1000;not null" validate:"required,min=6,max=1000"`
-	FirstName      string         `json:"first_name" gorm:"size:1000;not null" validate:"required,min=2,max=1000"`
-	LastName       string         `json:"last_name" gorm:"size:1000;not null" validate:"required,min=2,max=1000"`
-	MiddleName     string         `json:"middle_name" gorm:"size:1000;" validate:"max=1000"`
-	Country        string         `json:"country" gorm:"size:100;" validate:"max=100"`
-	AcademicDegree string         `json:"academic_degree" gorm:"size:1000;" validate:"max=1000"`
-	VAC            string         `json:"vac" gorm:"size:1000;" validate:"max=1000"`
-	Appointment    string         `json:"appointment" gorm:"size:1000;" validate:"max=1000"`
-	Subscribers    uint64         `json:"subscribers" gorm:"default:0"`
-	MySubscribes   uint64         `json:"my_subscribes" gorm:"default:0"`
-	Publications   []Publications `gorm:"many2many:profile_publications;"`
+	ID               uint64         `json:"id" gorm:"primaryKey"`
+	Login            string         `json:"login" gorm:"size:1000;not null;unique" validate:"omitempty,email,min=4,max=1000"`
+	Password         string         `json:"password" gorm:"size:1000;not null" validate:"omitempty,min=8,max=1000"`
+	FirstName        string         `json:"first_name" gorm:"size:1000;not null" validate:"omitempty,min=3,max=1000"`
+	LastName         string         `json:"last_name" gorm:"size:1000;not null" validate:"omitempty,min=3,max=1000"`
+	MiddleName       string         `json:"middle_name" gorm:"size:1000;" validate:"max=1000"`
+	Country          string         `json:"country" gorm:"size:100;" validate:"max=100"`
+	AcademicDegree   string         `json:"academic_degree" gorm:"size:1000;" validate:"max=1000"`
+	VAC              string         `json:"vac" gorm:"size:1000;" validate:"max=1000"`
+	Appointment      string         `json:"appointment" gorm:"size:1000;" validate:"max=1000"`
+	Publications     []Publications `gorm:"many2many:profile_publications;"`
+	SubscribersList  []Profiles     `gorm:"many2many:subscribs;joinForeignKey:profiles_id;joinReferences:subscribers_id"`
+	MySubscribesList []Profiles     `gorm:"many2many:subscribs;joinForeignKey:subscribers_id;joinReferences:profiles_id"`
 }
 
 func CreateProfile(profile *Profiles) error {
@@ -23,12 +23,15 @@ func CreateProfile(profile *Profiles) error {
 	if result.Error != nil {
 		return result.Error
 	}
+	if result.Error != nil {
+		return result.Error
+	}
 	return nil
 }
 
-func GetProfileByID(ID int) (*Profiles, error) {
+func GetProfileByID(ID uint64) (*Profiles, error) {
 	profile := new(Profiles)
-	result := DB.Preload("Publications").First(profile, ID)
+	result := DB.Preload("Publications").Preload("SubscribersList").Preload("MySubscribesList").First(profile, ID)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -37,14 +40,23 @@ func GetProfileByID(ID int) (*Profiles, error) {
 
 func GetProfileByLogin(login string) (*Profiles, error) {
 	profile := new(Profiles)
-	result := DB.Preload("Publications").Where("login = ?", login).First(profile)
+	result := DB.Preload("Publications").Preload("SubscribersList").Preload("MySubscribesList").Where("login = ?", login).First(profile)
 	if result.Error != nil {
 		return nil, result.Error
 	}
 	return profile, nil
 }
 
-func DeleteProfileByID(ID int) error {
+func GetAllProfiles() ([]Profiles, error) {
+	var profiles []Profiles
+	result := DB.Preload("Publications").Preload("SubscribersList").Preload("MySubscribesList").Find(&profiles)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return profiles, nil
+}
+
+func DeleteProfileByID(ID uint64) error {
 	profile := new(Profiles)
 	result := DB.Delete(profile, ID)
 	if result.Error != nil {
@@ -68,7 +80,7 @@ func DeleteProfileByLogin(login string) error {
 	return nil
 }
 
-func UpdateProfileByID(ID int, updProfile *Profiles) error {
+func UpdateProfileByID(ID uint64, updProfile *Profiles) error {
 	result := DB.Model(new(Profiles)).Where("id = ?", ID).Updates(updProfile)
 	if result.Error != nil {
 		return result.Error
@@ -84,19 +96,10 @@ func UpdateProfileByLogin(login string, updProfile *Profiles) error {
 	if result.Error != nil {
 		return result.Error
 	}
-	if result.RowsAffected == 0 {
-		return fmt.Errorf("Профиль с login: %s не найден", login)
-	}
+	//if result.RowsAffected == 0 {
+	//	return fmt.Errorf("Профиль с login: %s не найден", login)
+	//}
 	return nil
-}
-
-func GetAllProfiles() ([]Profiles, error) {
-	var profiles []Profiles
-	result := DB.Preload("Publications").Find(&profiles)
-	if result.Error != nil {
-		return nil, result.Error
-	}
-	return profiles, nil
 }
 
 func AddPublicationsToProfile(ID uint64, pubIDs []uint64) error {
@@ -129,6 +132,42 @@ func DeletePublicationsFromProfile(ID uint64, pubIDs []uint64) error {
 		return result.Error
 	}
 	err := DB.Model(profile).Association("Publications").Delete(pubs)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func AddSubscribersToProfile(ID uint64, subIDs []uint64) error {
+	profile := new(Profiles)
+	var subs []Profiles
+	result := DB.First(profile, ID)
+	if result.Error != nil {
+		return result.Error
+	}
+	result = DB.Find(&subs, subIDs)
+	if result.Error != nil {
+		return result.Error
+	}
+	err := DB.Model(profile).Association("SubscribersList").Append(subs)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func DeleteSubscribersFromProfile(ID uint64, subIDs []uint64) error {
+	profile := new(Profiles)
+	var subs []Profiles
+	result := DB.First(profile, ID)
+	if result.Error != nil {
+		return result.Error
+	}
+	result = DB.Find(&subs, subIDs)
+	if result.Error != nil {
+		return result.Error
+	}
+	err := DB.Model(profile).Association("SubscribersList").Delete(subs)
 	if err != nil {
 		return err
 	}

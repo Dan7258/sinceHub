@@ -7,9 +7,9 @@ import (
 
 type Publications struct {
 	ID        uint64     `json:"id" gorm:"primaryKey"`
-	Title     string     `json:"title" gorm:"size:1000;not null" validate:"required,min=2,max=1000"`
-	Abstract  string     `json:"abstract" gorm:"size:1000;"`
-	Content   string     `json:"content" gorm:"type:text;not null" validate:"required,min=2"`
+	Title     string     `json:"title" gorm:"size:1000;not null" validate:"omitempty,min=2,max=1000"`
+	Abstract  string     `json:"abstract" gorm:"size:1000;" validate:"omitempty,min=2"`
+	Content   string     `json:"content" gorm:"type:text;not null" validate:"omitempty,min=2"`
 	CreatedAt time.Time  `json:"created_at"`
 	UpdatedAt time.Time  `json:"updated_at"`
 	Profiles  []Profiles `json:"profiles" gorm:"many2many:profile_publications;"`

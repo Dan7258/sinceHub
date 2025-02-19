@@ -5,12 +5,10 @@ CREATE TABLE profiles (
     first_Name VARCHAR(1000) NOT NULL,
     last_name VARCHAR(1000) NOT NULL,
     middle_name VARCHAR(1000),
-    Country VARCHAR(100),
+    country VARCHAR(100),
     academic_degree VARCHAR(1000),
     VAC VARCHAR(1000),
-    appointment VARCHAR(1000),
-    subscribers INTEGER,
-    my_subscribes INTEGER
+    appointment VARCHAR(1000)
 );
 
 CREATE TABLE publications (
@@ -48,7 +46,7 @@ CREATE TABLE profile_publications (
 );
 
 CREATE TABLE subscribs (
-    profile_id INTEGER REFERENCES Profiles(id),
-    subscriber_id INTEGER REFERENCES Profiles(id),
-    PRIMARY KEY (profile_id, subscriber_id)
+    profiles_id INTEGER REFERENCES Profiles(id),
+    subscribers_id INTEGER REFERENCES Profiles(id),
+    PRIMARY KEY (profiles_id, subscribers_id)
 );

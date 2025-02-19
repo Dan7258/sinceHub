@@ -40,7 +40,7 @@ func (p Profiles) CreateProfile() revel.Result {
 	return p.RenderJSON(map[string]int{"status": http.StatusCreated})
 }
 
-func (p Profiles) GetProfileByID(id int) revel.Result {
+func (p Profiles) GetProfileByID(id uint64) revel.Result {
 	profile, err := models.GetProfileByID(id)
 	if err != nil {
 		p.Response.Status = http.StatusNotFound
@@ -60,7 +60,7 @@ func (p Profiles) GetProfileByLogin(login string) revel.Result {
 	return p.RenderJSON(profile)
 }
 
-func (p Profiles) DeleteProfileByID(id int) revel.Result {
+func (p Profiles) DeleteProfileByID(id uint64) revel.Result {
 	err := models.DeleteProfileByID(id)
 	if err != nil {
 		p.Response.Status = http.StatusInternalServerError
@@ -80,11 +80,17 @@ func (p Profiles) DeleteProfileByLogin(login string) revel.Result {
 	return p.RenderJSON(map[string]int{"status": http.StatusNoContent})
 }
 
-func (p Profiles) UpdateProfileByID(id int) revel.Result {
+func (p Profiles) UpdateProfileByID(id uint64) revel.Result {
 	profile := new(models.Profiles)
 	err := p.Params.BindJSON(profile)
 	if err != nil {
 		p.Response.Status = http.StatusBadRequest
+		return p.RenderJSON(map[string]string{"error": err.Error()})
+	}
+	validate := validator.New()
+	err = validate.Struct(profile)
+	if err != nil {
+		p.Response.Status = http.StatusUnprocessableEntity
 		return p.RenderJSON(map[string]string{"error": err.Error()})
 	}
 
@@ -104,6 +110,12 @@ func (p Profiles) UpdateProfileByLogin(login string) revel.Result {
 	err := p.Params.BindJSON(profile)
 	if err != nil {
 		p.Response.Status = http.StatusBadRequest
+		return p.RenderJSON(map[string]string{"error": err.Error()})
+	}
+	validate := validator.New()
+	err = validate.Struct(profile)
+	if err != nil {
+		p.Response.Status = http.StatusUnprocessableEntity
 		return p.RenderJSON(map[string]string{"error": err.Error()})
 	}
 
@@ -152,6 +164,38 @@ func (p Profiles) DeletePublicationsFromProfile(id uint64) revel.Result {
 		return p.RenderJSON(map[string]string{"error": err.Error()})
 	}
 	err = models.DeletePublicationsFromProfile(id, pubIDs)
+	if err != nil {
+		p.Response.Status = http.StatusInternalServerError
+		return p.RenderJSON(map[string]string{"error": err.Error()})
+	}
+	p.Response.Status = http.StatusNoContent
+	return p.RenderJSON(map[string]int{"status": http.StatusNoContent})
+}
+
+func (p Profiles) AddSubscribersToProfile(id uint64) revel.Result {
+	var subIDs []uint64
+	err := p.Params.BindJSON(&subIDs)
+	if err != nil {
+		p.Response.Status = http.StatusBadRequest
+		return p.RenderJSON(map[string]string{"error": err.Error()})
+	}
+	err = models.AddSubscribersToProfile(id, subIDs)
+	if err != nil {
+		p.Response.Status = http.StatusInternalServerError
+		return p.RenderJSON(map[string]string{"error": err.Error()})
+	}
+	p.Response.Status = http.StatusNoContent
+	return p.RenderJSON(map[string]int{"status": http.StatusNoContent})
+}
+
+func (p Profiles) DeleteSubscribersFromProfile(id uint64) revel.Result {
+	var subIDs []uint64
+	err := p.Params.BindJSON(&subIDs)
+	if err != nil {
+		p.Response.Status = http.StatusBadRequest
+		return p.RenderJSON(map[string]string{"error": err.Error()})
+	}
+	err = models.DeleteSubscribersFromProfile(id, subIDs)
 	if err != nil {
 		p.Response.Status = http.StatusInternalServerError
 		return p.RenderJSON(map[string]string{"error": err.Error()})
