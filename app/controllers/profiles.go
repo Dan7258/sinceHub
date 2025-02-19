@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"sinceHub/app/models"
+	"strconv"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/revel/revel"
@@ -20,8 +21,6 @@ func (p Profiles) CreateProfile() revel.Result {
 		p.Response.Status = http.StatusBadRequest
 		return p.RenderJSON(map[string]string{"error": err.Error()})
 	}
-	fmt.Println(profile)
-
 	validate := validator.New()
 	err = validate.Struct(profile)
 	if err != nil {
@@ -37,7 +36,33 @@ func (p Profiles) CreateProfile() revel.Result {
 	}
 
 	p.Response.Status = http.StatusCreated
-	return p.RenderJSON(map[string]int{"status": http.StatusCreated})
+	return p.Redirect(Profiles.Login)
+}
+
+func (p Profiles) Login() revel.Result {
+	profile := new(models.Profiles)
+	err := p.Params.BindJSON(profile)
+	if err != nil {
+		p.Response.Status = http.StatusBadRequest
+		return p.RenderJSON(map[string]string{"error": err.Error()})
+	}
+
+	user, err := models.GetProfileLoginData(profile.Login)
+	if err != nil || user.Password != profile.Password {
+		p.Response.Status = http.StatusUnauthorized
+		return p.Redirect(Profiles.Login)
+	}
+	p.Session["user"] = fmt.Sprintf("%d", user.ID)
+	p.Response.Status = http.StatusNoContent
+	return p.Redirect(Profiles.GetUserProfile)
+}
+
+func (p Profiles) Logout() revel.Result {
+	for k := range p.Session {
+		delete(p.Session, k)
+	}
+	p.Response.Status = http.StatusNoContent
+	return p.RenderJSON(map[string]string{"message": "Logged out"})
 }
 
 func (p Profiles) GetProfileByID(id uint64) revel.Result {
@@ -50,13 +75,14 @@ func (p Profiles) GetProfileByID(id uint64) revel.Result {
 	return p.RenderJSON(profile)
 }
 
-func (p Profiles) GetProfileByLogin(login string) revel.Result {
-	profile, err := models.GetProfileByLogin(login)
-	if err != nil {
-		p.Response.Status = http.StatusNotFound
-		return p.RenderJSON(map[string]string{"error": err.Error()})
+func (p Profiles) GetUserProfile() revel.Result {
+	user, ok := p.Session["user"]
+	if !ok {
+		p.Response.Status = http.StatusUnauthorized
+		return p.Redirect(Profiles.Login)
 	}
-	p.Response.Status = http.StatusOK
+	userID, _ := strconv.ParseUint(user.(string), 10, 64)
+	profile, _ := models.GetUserProfile(userID)
 	return p.RenderJSON(profile)
 }
 
@@ -131,13 +157,13 @@ func (p Profiles) UpdateProfileByLogin(login string) revel.Result {
 }
 
 func (p Profiles) GetAllProfiles() revel.Result {
-	Profiles, err := models.GetAllProfiles()
+	profiles, err := models.GetAllProfiles()
 	if err != nil {
 		p.Response.Status = http.StatusInternalServerError
 		return p.RenderJSON(map[string]string{"error": err.Error()})
 	}
 	p.Response.Status = http.StatusOK
-	return p.RenderJSON(Profiles)
+	return p.RenderJSON(profiles)
 }
 
 func (p Profiles) AddPublicationsToProfile(id uint64) revel.Result {

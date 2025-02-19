@@ -31,6 +31,15 @@ func CreateProfile(profile *Profiles) error {
 
 func GetProfileByID(ID uint64) (*Profiles, error) {
 	profile := new(Profiles)
+	result := DB.Select("id, first_name, last_name, middle_name, country, vac, appointment").Preload("Publications").Preload("SubscribersList").Preload("MySubscribesList").First(profile, ID)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return profile, nil
+}
+
+func GetUserProfile(ID uint64) (*Profiles, error) {
+	profile := new(Profiles)
 	result := DB.Preload("Publications").Preload("SubscribersList").Preload("MySubscribesList").First(profile, ID)
 	if result.Error != nil {
 		return nil, result.Error
@@ -38,9 +47,9 @@ func GetProfileByID(ID uint64) (*Profiles, error) {
 	return profile, nil
 }
 
-func GetProfileByLogin(login string) (*Profiles, error) {
+func GetProfileLoginData(login string) (*Profiles, error) {
 	profile := new(Profiles)
-	result := DB.Preload("Publications").Preload("SubscribersList").Preload("MySubscribesList").Where("login = ?", login).First(profile)
+	result := DB.Select("id, login, password").Where("login = ?", login).First(profile)
 	if result.Error != nil {
 		return nil, result.Error
 	}
