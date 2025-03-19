@@ -82,7 +82,11 @@ func (p Publications) UpdatePublicationByID(id int) revel.Result {
 	return p.RenderJSON(map[string]int{"status": http.StatusNoContent})
 }
 
-func (p Publications) GetAllPublications() revel.Result {
+func (p Publications) ShowPublications() revel.Result {
+	return p.RenderTemplate("Publications/publications.html")
+}
+
+func (p Publications) GetPublicationsData() revel.Result {
 	pub, err := models.GetAllPublications()
 	if err != nil {
 		p.Response.Status = http.StatusInternalServerError

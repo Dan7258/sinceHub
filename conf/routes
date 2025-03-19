@@ -6,7 +6,7 @@
 module:testrunner
 # module:jobs
 
-GET     /                                       App.Index
+
 GET     /tags/id/:id                            Tags.GetTagByID
 GET     /tags/name/:name                        Tags.GetTagByName
 GET     /tags                                   Tags.GetAllTags
@@ -17,7 +17,8 @@ DELETE  /tags/:id/publications                  Tags.DeletePublicationsFromTag
 PATCH   /tags/id/:id                            Tags.UpdateTagByID
 
 GET     /publications/id/:id                    Publications.GetPublicationByID
-GET     /publications                           Publications.GetAllPublications
+GET     /                                       Publications.ShowPublications
+GET     /getPublicationsData                    Publications.GetPublicationsData
 POST    /publications                           Publications.CreatePublication
 POST    /publications/:id/tags                  Publications.AddTagsToPublication
 POST    /publications/:id/profiles              Publications.AddProfilesToPublication
@@ -27,8 +28,10 @@ DELETE  /publications/:id/profiles              Publications.DeleteProfilesFromP
 PATCH   /publications/id/:id                    Publications.UpdatePublicationByID
 
 GET     /profiles/id/:id                        Profiles.GetProfileByID
-GET     /profile                                Profiles.GetUserProfile
+GET     /getUserData                            Profiles.GetUserData
+GET     /profile                                Profiles.ShowUserProfile
 GET     /profiles                               Profiles.GetAllProfiles
+GET     /login                                  Profiles.ShowLogin
 POST    /login                                  Profiles.Login
 GET     /logout                                 Profiles.Logout
 POST    /register                               Profiles.CreateProfile

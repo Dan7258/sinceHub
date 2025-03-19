@@ -1,0 +1,224 @@
+<!-- app/views/Profiles/index.html -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Главная страница</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7fa;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+        header {
+            background: #2c3e50;
+            padding: 15px 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        .nav-container {
+            max-width: 900px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .nav-container a {
+            color: #ecf0f1;
+            text-decoration: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            transition: background 0.3s;
+            font-weight: 500;
+        }
+        .nav-container a:hover {
+            background: #34495e;
+        }
+        .nav-container .logout-btn {
+            background: #e74c3c;
+        }
+        .nav-container .logout-btn:hover {
+            background: #c0392b;
+        }
+        .container {
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 30px;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .publication {
+            background: #ecf0f1;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+        .publication:hover {
+            background: #dfe6e9;
+        }
+        .publication h2 {
+            color: #34495e;
+            margin: 0 0 10px 0;
+            font-size: 1.5em;
+        }
+        .publication p {
+            margin: 5px 0;
+        }
+        .publication .abstract {
+            font-style: italic;
+            color: #7f8c8d;
+        }
+        .publication .profiles, .publication .tags {
+            margin-top: 10px;
+        }
+        .publication .profiles span, .publication .tags span {
+            background: #3498db;
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 15px;
+            margin-right: 5px;
+            display: inline-block;
+        }
+        .loading {
+            color: #7f8c8d;
+            font-style: italic;
+        }
+        @media (max-width: 600px) {
+            .nav-container {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .container {
+                padding: 15px;
+            }
+            .publication h2 {
+                font-size: 1.2em;
+            }
+        }
+    </style>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            fetch('/getPublicationsData', { credentials: 'include' })
+                .then(response => {
+                    if (response.status === 401) {
+                        window.location.href = '/login';
+                        document.querySelector('header').style.display = 'none';
+                        return Promise.reject('Unauthorized');
+                    }
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    document.querySelector('header').style.display = 'block';
+                    const publicationsContainer = document.getElementById('publications');
+                    publicationsContainer.innerHTML = '';
+
+                    if (data && data.length > 0) {
+                        data.forEach(pub => {
+                            const div = document.createElement('div');
+                            div.className = 'publication';
+
+                            const title = document.createElement('h2');
+                            title.innerText = pub.title || 'Без названия';
+                            div.appendChild(title);
+
+                            const abstract = document.createElement('p');
+                            abstract.className = 'abstract';
+                            abstract.innerText = pub.abstract || 'Абстракт не указан';
+                            div.appendChild(abstract);
+
+                            const content = document.createElement('p');
+                            content.innerText = pub.content || 'Содержание не указано';
+                            div.appendChild(content);
+
+                            const created = document.createElement('p');
+                            created.innerText = 'Создано: ' + (pub.created_at ? new Date(pub.created_at).toLocaleString() : 'Не указано');
+                            div.appendChild(created);
+
+                            const updated = document.createElement('p');
+                            updated.innerText = 'Обновлено: ' + (pub.updated_at ? new Date(pub.updated_at).toLocaleString() : 'Не указано');
+                            div.appendChild(updated);
+
+                            const profiles = document.createElement('div');
+                            profiles.className = 'profiles';
+                            profiles.innerText = 'Авторы: ';
+                            if (pub.profiles && pub.profiles.length > 0) {
+                                pub.profiles.forEach(profile => {
+                                    const span = document.createElement('span');
+                                    span.innerText = `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'Неизвестный автор';
+                                    profiles.appendChild(span);
+                                });
+                            } else {
+                                profiles.innerText += 'Авторы не указаны';
+                            }
+                            div.appendChild(profiles);
+
+                            const tags = document.createElement('div');
+                            tags.className = 'tags';
+                            tags.innerText = 'Теги: ';
+                            if (pub.tags && pub.tags.length > 0) {
+                                pub.tags.forEach(tag => {
+                                    const span = document.createElement('span');
+                                    span.innerText = tag.name || 'Без названия';
+                                    tags.appendChild(span);
+                                });
+                            } else {
+                                tags.innerText += 'Теги не указаны';
+                            }
+                            div.appendChild(tags);
+
+                            publicationsContainer.appendChild(div);
+                        });
+                    } else {
+                        publicationsContainer.innerHTML = '<p>Публикаций нет</p>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Ошибка при получении публикаций:', error);
+                    document.querySelector('.container').innerHTML =
+                        '<p style="color: #e74c3c;">Ошибка при загрузке публикаций</p>';
+                });
+
+            document.getElementById('logout').addEventListener('click', function(e) {
+                e.preventDefault();
+                fetch('/logout', { method: 'POST', credentials: 'include' })
+                    .then(() => window.location.href = '/login')
+                    .catch(error => console.error('Ошибка при выходе:', error));
+            });
+        });
+    </script>
+</head>
+<body>
+<header style="display: none;">
+    <div class="nav-container">
+        <div>
+            <a href="/profile">Профиль</a>
+            <a href="/">Главная</a>
+            <a href="/settings">Настройки</a>
+        </div>
+        <div>
+            <a href="/logout" id="logout" class="logout-btn">Logout</a>
+        </div>
+    </div>
+</header>
+<div class="container">
+    <h1>Публикации</h1>
+    <div id="publications" class="loading">Загрузка...</div>
+</div>
+</body>
+</html>

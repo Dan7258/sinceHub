@@ -36,25 +36,27 @@ func (p Profiles) CreateProfile() revel.Result {
 	}
 
 	p.Response.Status = http.StatusCreated
-	return p.Redirect(Profiles.Login)
+	return p.Redirect("/login")
 }
 
-func (p Profiles) Login() revel.Result {
-	profile := new(models.Profiles)
-	err := p.Params.BindJSON(profile)
+func (p Profiles) Login(login, password string) revel.Result {
+	user, err := models.GetProfileLoginData(login)
 	if err != nil {
-		p.Response.Status = http.StatusBadRequest
-		return p.RenderJSON(map[string]string{"error": err.Error()})
+		p.Response.Status = http.StatusUnauthorized
+		return p.RenderTemplate("Profiles/login.html")
+	}
+	if user.Password != password {
+		p.Response.Status = http.StatusUnauthorized
+		return p.RenderTemplate("Profiles/login.html")
 	}
 
-	user, err := models.GetProfileLoginData(profile.Login)
-	if err != nil || user.Password != profile.Password {
-		p.Response.Status = http.StatusUnauthorized
-		return p.Redirect(Profiles.Login)
-	}
 	p.Session["user"] = fmt.Sprintf("%d", user.ID)
-	p.Response.Status = http.StatusNoContent
-	return p.Redirect(Profiles.GetUserProfile)
+	p.Response.Status = http.StatusFound
+	return p.Redirect("/profile")
+}
+
+func (p Profiles) ShowLogin() revel.Result {
+	return p.RenderTemplate("Profiles/login.html")
 }
 
 func (p Profiles) Logout() revel.Result {
@@ -62,7 +64,7 @@ func (p Profiles) Logout() revel.Result {
 		delete(p.Session, k)
 	}
 	p.Response.Status = http.StatusNoContent
-	return p.RenderJSON(map[string]string{"message": "Logged out"})
+	return p.Redirect("/login")
 }
 
 func (p Profiles) GetProfileByID(id uint64) revel.Result {
@@ -74,15 +76,24 @@ func (p Profiles) GetProfileByID(id uint64) revel.Result {
 	p.Response.Status = http.StatusOK
 	return p.RenderJSON(profile)
 }
+func (p Profiles) ShowUserProfile() revel.Result {
+	_, ok := p.Session["user"]
+	if !ok {
+		p.Response.Status = http.StatusUnauthorized
+		return p.Redirect("/login")
+	}
 
-func (p Profiles) GetUserProfile() revel.Result {
+	return p.RenderTemplate("Profiles/profile.html")
+}
+func (p Profiles) GetUserData() revel.Result {
 	user, ok := p.Session["user"]
 	if !ok {
 		p.Response.Status = http.StatusUnauthorized
-		return p.Redirect(Profiles.Login)
+		return p.Redirect("/login")
 	}
 	userID, _ := strconv.ParseUint(user.(string), 10, 64)
 	profile, _ := models.GetUserProfile(userID)
+	fmt.Println(profile)
 	return p.RenderJSON(profile)
 }
 
