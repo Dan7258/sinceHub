@@ -241,12 +241,7 @@
                         '<p style="color: #e74c3c;">Ошибка при загрузке профиля</p>';
                 });
 
-            document.getElementById('logout').addEventListener('click', function(e) {
-                e.preventDefault();
-                fetch('/logout', { method: 'POST', credentials: 'include' })
-                    .then(() => window.location.href = '/login')
-                    .catch(error => console.error('Ошибка при выходе:', error));
-            });
+
 
             document.getElementById('subscribers_btn').addEventListener('click', function() {
                 document.getElementById('subscribers_list').scrollIntoView({ behavior: 'smooth' });
@@ -271,7 +266,7 @@
             <a href="/settings">Настройки</a>
         </div>
         <div>
-            <a href="#" id="logout" class="logout-btn">Logout</a>
+            <a href="/logout" id="logout" class="logout-btn">Logout</a>
         </div>
     </div>
 </header>

@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"sinceHub/app/middleware"
 	"sinceHub/app/models"
 
 	"github.com/revel/revel"
@@ -16,4 +17,5 @@ func (c App) Index() revel.Result {
 
 func init() {
 	revel.OnAppStart(models.InitDB)
+	revel.OnAppStart(middleware.Init)
 }

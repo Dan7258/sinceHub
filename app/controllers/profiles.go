@@ -2,12 +2,12 @@ package controllers
 
 import (
 	"fmt"
-	"net/http"
-	"sinceHub/app/models"
-	"strconv"
-
 	"github.com/go-playground/validator/v10"
 	"github.com/revel/revel"
+	"net/http"
+	"sinceHub/app/middleware"
+	"sinceHub/app/models"
+	"time"
 )
 
 type Profiles struct {
@@ -49,8 +49,23 @@ func (p Profiles) Login(login, password string) revel.Result {
 		p.Response.Status = http.StatusUnauthorized
 		return p.RenderTemplate("Profiles/login.html")
 	}
+	token, err := middleware.GenerateJWT(user.ID)
 
-	p.Session["user"] = fmt.Sprintf("%d", user.ID)
+	if err != nil {
+		p.Response.Status = http.StatusInternalServerError
+		return p.RenderText("Ошибка генерации токена")
+	}
+	cookie := &http.Cookie{
+		Name:     "auth_token",
+		Value:    token,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteStrictMode,
+	}
+	p.SetCookie(cookie)
+
+	//p.Session["user"] = fmt.Sprintf("%d", user.ID)
 	p.Response.Status = http.StatusFound
 	return p.Redirect("/profile")
 }
@@ -60,10 +75,17 @@ func (p Profiles) ShowLogin() revel.Result {
 }
 
 func (p Profiles) Logout() revel.Result {
-	for k := range p.Session {
-		delete(p.Session, k)
+	cookie := &http.Cookie{
+		Name:     "auth_token",
+		Value:    "",
+		Path:     "/",
+		MaxAge:   -1,
+		Expires:  time.Unix(0, 0),
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteStrictMode,
 	}
-	p.Response.Status = http.StatusNoContent
+	p.SetCookie(cookie)
 	return p.Redirect("/login")
 }
 
@@ -77,21 +99,20 @@ func (p Profiles) GetProfileByID(id uint64) revel.Result {
 	return p.RenderJSON(profile)
 }
 func (p Profiles) ShowUserProfile() revel.Result {
-	_, ok := p.Session["user"]
-	if !ok {
-		p.Response.Status = http.StatusUnauthorized
+	_, err := middleware.ValidateJWT(p.Request, "auth_token")
+	if err != nil {
+		//p.Response.Status = http.StatusUnauthorized
 		return p.Redirect("/login")
 	}
 
 	return p.RenderTemplate("Profiles/profile.html")
 }
 func (p Profiles) GetUserData() revel.Result {
-	user, ok := p.Session["user"]
-	if !ok {
+	userID, err := middleware.ValidateJWT(p.Request, "auth_token")
+	if err != nil {
 		p.Response.Status = http.StatusUnauthorized
 		return p.Redirect("/login")
 	}
-	userID, _ := strconv.ParseUint(user.(string), 10, 64)
 	profile, _ := models.GetUserProfile(userID)
 	fmt.Println(profile)
 	return p.RenderJSON(profile)
