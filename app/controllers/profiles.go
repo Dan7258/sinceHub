@@ -19,12 +19,14 @@ func (p Profiles) CreateProfile() revel.Result {
 	err := p.Params.BindJSON(profile)
 	if err != nil {
 		p.Response.Status = http.StatusBadRequest
+		revel.AppLog.Error(err.Error())
 		return p.RenderJSON(map[string]string{"error": err.Error()})
 	}
 	validate := validator.New()
 	err = validate.Struct(profile)
 	if err != nil {
 		p.Response.Status = http.StatusUnprocessableEntity
+		revel.AppLog.Error(err.Error())
 		return p.RenderJSON(map[string]string{"error": err.Error()})
 	}
 
@@ -32,11 +34,15 @@ func (p Profiles) CreateProfile() revel.Result {
 
 	if err != nil {
 		p.Response.Status = http.StatusInternalServerError
+		revel.AppLog.Error(err.Error())
 		return p.RenderJSON(map[string]string{"error": err.Error()})
 	}
 
-	p.Response.Status = http.StatusCreated
 	return p.Redirect("/login")
+}
+
+func (p Profiles) ShowRegisterPage() revel.Result {
+	return p.RenderTemplate("register.html")
 }
 
 func (p Profiles) Login(login, password string) revel.Result {
@@ -74,6 +80,11 @@ func (p Profiles) ShowLoginPage() revel.Result {
 }
 
 func (p Profiles) ShowSettingsPage() revel.Result {
+	_, err := middleware.ValidateJWT(p.Request, "auth_token")
+	if err != nil {
+		//p.Response.Status = http.StatusUnauthorized
+		return p.Redirect("/login")
+	}
 	return p.RenderTemplate("settings.html")
 }
 

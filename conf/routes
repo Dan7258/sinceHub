@@ -34,6 +34,7 @@ GET     /profiles                               Profiles.GetAllProfiles
 GET     /login                                  Profiles.ShowLoginPage
 POST    /login                                  Profiles.Login
 GET     /logout                                 Profiles.Logout
+GET     /register                               Profiles.ShowRegisterPage
 POST    /register                               Profiles.CreateProfile
 GET     /settings                               Profiles.ShowSettingsPage
 POST    /profiles/:id/publications              Profiles.AddPublicationsToProfile
