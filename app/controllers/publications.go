@@ -83,7 +83,7 @@ func (p Publications) UpdatePublicationByID(id int) revel.Result {
 }
 
 func (p Publications) ShowPublications() revel.Result {
-	return p.RenderTemplate("Publications/publications.html")
+	return p.RenderTemplate("publications.html")
 }
 
 func (p Publications) GetPublicationsData() revel.Result {

@@ -43,11 +43,11 @@ func (p Profiles) Login(login, password string) revel.Result {
 	user, err := models.GetProfileLoginData(login)
 	if err != nil {
 		p.Response.Status = http.StatusUnauthorized
-		return p.RenderTemplate("Profiles/login.html")
+		return p.RenderTemplate("login.html")
 	}
 	if user.Password != password {
 		p.Response.Status = http.StatusUnauthorized
-		return p.RenderTemplate("Profiles/login.html")
+		return p.RenderTemplate("login.html")
 	}
 	token, err := middleware.GenerateJWT(user.ID)
 
@@ -65,13 +65,16 @@ func (p Profiles) Login(login, password string) revel.Result {
 	}
 	p.SetCookie(cookie)
 
-	//p.Session["user"] = fmt.Sprintf("%d", user.ID)
 	p.Response.Status = http.StatusFound
 	return p.Redirect("/profile")
 }
 
-func (p Profiles) ShowLogin() revel.Result {
-	return p.RenderTemplate("Profiles/login.html")
+func (p Profiles) ShowLoginPage() revel.Result {
+	return p.RenderTemplate("login.html")
+}
+
+func (p Profiles) ShowSettingsPage() revel.Result {
+	return p.RenderTemplate("settings.html")
 }
 
 func (p Profiles) Logout() revel.Result {
@@ -105,7 +108,7 @@ func (p Profiles) ShowUserProfile() revel.Result {
 		return p.Redirect("/login")
 	}
 
-	return p.RenderTemplate("Profiles/profile.html")
+	return p.RenderTemplate("profile.html")
 }
 func (p Profiles) GetUserData() revel.Result {
 	userID, err := middleware.ValidateJWT(p.Request, "auth_token")

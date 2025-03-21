@@ -5,7 +5,6 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/joho/godotenv"
 	"github.com/revel/revel"
-	"log"
 	"os"
 	"time"
 )
@@ -19,12 +18,12 @@ var secretKey []byte
 func Init() {
 	err := godotenv.Load(".env")
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		revel.AppLog.Error("SECRET_KEY environment variable not set")
 		return
 	}
 	secretKey = []byte(os.Getenv("SECRET_KEY"))
-	if secretKey == nil {
-		log.Fatal("SECRET_KEY environment variable not set")
+	if len(secretKey) == 0 {
+		revel.AppLog.Error("SECRET_KEY environment variable not set")
 		return
 	}
 }
@@ -32,8 +31,7 @@ func Init() {
 func GenerateJWT(userID uint64) (string, error) {
 	token := jwt.New(jwt.SigningMethodHS256)
 	claims := token.Claims.(jwt.MapClaims)
-	claims["authorized"] = true
-	claims["userID"] = userID
+	claims["sub"] = userID
 	claims["exp"] = time.Now().Add(time.Hour * 72).Unix()
 
 	tokenString, err := token.SignedString(secretKey)
@@ -62,11 +60,11 @@ func ValidateJWT(request *revel.Request, cookieName string) (uint64, error) {
 		return 0, err
 	}
 	exp := token.Claims.(jwt.MapClaims)["exp"].(float64)
-	UID := uint64(token.Claims.(jwt.MapClaims)["userID"].(float64))
+	userID := uint64(token.Claims.(jwt.MapClaims)["sub"].(float64))
 
 	if time.Until(time.Unix(int64(exp), 0)) < time.Minute*30 {
-		GenerateJWT(UID)
+		GenerateJWT(userID)
 	}
 
-	return UID, nil
+	return userID, nil
 }
