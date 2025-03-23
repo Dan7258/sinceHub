@@ -3,6 +3,7 @@ package controllers
 import (
 	"sinceHub/app/middleware"
 	"sinceHub/app/models"
+	"sinceHub/app/smtp"
 
 	"github.com/revel/revel"
 )
@@ -16,6 +17,7 @@ func (c App) Index() revel.Result {
 }
 
 func init() {
-	revel.OnAppStart(models.InitDB)
 	revel.OnAppStart(middleware.Init)
+	revel.OnAppStart(models.InitDB)
+	revel.OnAppStart(smtp.InitSMTP)
 }

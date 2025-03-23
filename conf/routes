@@ -35,7 +35,8 @@ GET     /login                                  Profiles.ShowLoginPage
 POST    /login                                  Profiles.Login
 GET     /logout                                 Profiles.Logout
 GET     /register                               Profiles.ShowRegisterPage
-POST    /register                               Profiles.CreateProfile
+POST    /register                               Profiles.VerifyAndCreateUser
+POST    /send-verification-code                 Profiles.SendVerificationCode
 GET     /settings                               Profiles.ShowSettingsPage
 POST    /profiles/:id/publications              Profiles.AddPublicationsToProfile
 POST    /profiles/:id/subscribers               Profiles.AddSubscribersToProfile

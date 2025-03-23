@@ -38,6 +38,15 @@ func GetProfileByID(ID uint64) (*Profiles, error) {
 	return profile, nil
 }
 
+func ThsProfilesIsExist(login string) bool {
+	profile := new(Profiles)
+	result := DB.Select("login").Where("login = ?", login).First(profile)
+	if result.Error != nil {
+		return false
+	}
+	return true
+}
+
 func GetUserProfile(ID uint64) (*Profiles, error) {
 	profile := new(Profiles)
 	result := DB.Preload("Publications").Preload("SubscribersList").Preload("MySubscribesList").First(profile, ID)

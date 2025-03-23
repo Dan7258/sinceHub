@@ -1,12 +1,15 @@
 package controllers
 
 import (
+	"crypto/rand"
 	"fmt"
 	"github.com/go-playground/validator/v10"
 	"github.com/revel/revel"
+	"math/big"
 	"net/http"
 	"sinceHub/app/middleware"
 	"sinceHub/app/models"
+	"sinceHub/app/smtp"
 	"time"
 )
 
@@ -14,7 +17,68 @@ type Profiles struct {
 	*revel.Controller
 }
 
-func (p Profiles) CreateProfile() revel.Result {
+type VerificationInfo struct {
+	Code      string
+	ExpiresAt time.Time
+}
+
+type VerifyProfile struct {
+	Profile models.Profiles
+	Code    string `json:"code"`
+}
+
+var verificationCodes = make(map[string]VerificationInfo)
+
+//func (p Profiles) CreateProfile() revel.Result {
+//	profile := new(models.Profiles)
+//	err := p.Params.BindJSON(profile)
+//	if err != nil {
+//		p.Response.Status = http.StatusBadRequest
+//		revel.AppLog.Error(err.Error())
+//		return p.RenderJSON(map[string]string{"error": err.Error()})
+//	}
+//	validate := validator.New()
+//	err = validate.Struct(profile)
+//	if err != nil {
+//		p.Response.Status = http.StatusUnprocessableEntity
+//		revel.AppLog.Error(err.Error())
+//		return p.RenderJSON(map[string]string{"error": err.Error()})
+//	}
+//
+//	err = smtp.SendMessage(profile.Login, "hello")
+//	if err != nil {
+//		p.Response.Status = http.StatusUnprocessableEntity
+//		revel.AppLog.Error(err.Error())
+//		return p.RenderJSON(map[string]string{"error": err.Error()})
+//	}
+//	revel.AppLog.Info("message sent")
+//
+//	err = models.CreateProfile(profile)
+//
+//	if err != nil {
+//		p.Response.Status = http.StatusInternalServerError
+//		revel.AppLog.Error(err.Error())
+//		return p.RenderJSON(map[string]string{"error": err.Error()})
+//	}
+//
+//	return p.Redirect("/login")
+//}
+
+func (p Profiles) ShowRegisterPage() revel.Result {
+	return p.RenderTemplate("register.html")
+}
+
+func (p Profiles) generateRandomNumber() (*big.Int, error) {
+	max := big.NewInt(100000)
+	randomNumber, err := rand.Int(rand.Reader, max)
+	if err != nil {
+		fmt.Println("Ошибка при генерации случайного числа:", err)
+		return nil, err
+	}
+	return randomNumber, nil
+}
+
+func (p Profiles) SendVerificationCode() revel.Result {
 	profile := new(models.Profiles)
 	err := p.Params.BindJSON(profile)
 	if err != nil {
@@ -22,15 +86,65 @@ func (p Profiles) CreateProfile() revel.Result {
 		revel.AppLog.Error(err.Error())
 		return p.RenderJSON(map[string]string{"error": err.Error()})
 	}
-	validate := validator.New()
-	err = validate.Struct(profile)
+	if models.ThsProfilesIsExist(profile.Login) {
+		p.Response.Status = http.StatusConflict
+		return p.RenderJSON(map[string]string{"error": "Пользователь с таким email уже существует"})
+	}
+	randomNumber, err := p.generateRandomNumber()
+	if err != nil {
+		p.Response.Status = http.StatusInternalServerError
+		return p.RenderJSON(map[string]string{"error": "Не удалось сгенерировать код подтверждения"})
+	}
+
+	verificationCode := fmt.Sprintf("%06d", randomNumber)
+
+	verificationCodes[profile.Login] = VerificationInfo{
+		Code:      verificationCode,
+		ExpiresAt: time.Now().Add(15 * time.Minute),
+	}
+
+	err = smtp.SendMessage(profile.Login, verificationCode)
 	if err != nil {
 		p.Response.Status = http.StatusUnprocessableEntity
 		revel.AppLog.Error(err.Error())
 		return p.RenderJSON(map[string]string{"error": err.Error()})
 	}
+	revel.AppLog.Info("message sent")
+	return p.RenderJSON(map[string]string{"message": "Код подтверждения отправлен"})
+}
 
-	err = models.CreateProfile(profile)
+func (p Profiles) VerifyAndCreateUser() revel.Result {
+	var vprofile = new(VerifyProfile)
+	err := p.Params.BindJSON(vprofile)
+	if err != nil {
+		p.Response.Status = http.StatusBadRequest
+		return p.RenderJSON(map[string]string{"error": "Неверный запрос"})
+	}
+	validate := validator.New()
+	err = validate.Struct(vprofile.Profile)
+	if err != nil || vprofile.Code == "" {
+		p.Response.Status = http.StatusBadRequest
+		revel.AppLog.Error(err.Error())
+		return p.RenderJSON(map[string]string{"error": err.Error()})
+	}
+	verificationInfo, ok := verificationCodes[vprofile.Profile.Login]
+	if !ok {
+		p.Response.Status = http.StatusNotFound
+		return p.RenderJSON(map[string]string{"error": "Код подтверждения не найден. Пожалуйста, запросите новый код."})
+	}
+	if time.Now().After(verificationInfo.ExpiresAt) {
+		delete(verificationCodes, vprofile.Profile.Login)
+		p.Response.Status = http.StatusUnauthorized
+		return p.RenderJSON(map[string]string{"error": "Срок действия кода истек. Пожалуйста, запросите новый код."})
+	}
+
+	if verificationInfo.Code != vprofile.Code {
+		p.Response.Status = http.StatusUnauthorized
+		return p.RenderJSON(map[string]string{"error": "Неверный код подтверждения"})
+	}
+	delete(verificationCodes, vprofile.Profile.Login)
+
+	err = models.CreateProfile(&vprofile.Profile)
 
 	if err != nil {
 		p.Response.Status = http.StatusInternalServerError
@@ -41,8 +155,14 @@ func (p Profiles) CreateProfile() revel.Result {
 	return p.Redirect("/login")
 }
 
-func (p Profiles) ShowRegisterPage() revel.Result {
-	return p.RenderTemplate("register.html")
+func (p Profiles) showRegisterVerifyPage(profile *models.Profiles, code *big.Int) error {
+	err := smtp.SendMessage(profile.Login, "hello")
+	if err != nil {
+		p.Response.Status = http.StatusUnprocessableEntity
+		revel.AppLog.Error(err.Error())
+		return err
+	}
+	return nil
 }
 
 func (p Profiles) Login(login, password string) revel.Result {
