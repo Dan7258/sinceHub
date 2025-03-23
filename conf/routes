@@ -27,25 +27,28 @@ DELETE  /publications/:id/tags                  Publications.DeleteTagsFromPubli
 DELETE  /publications/:id/profiles              Publications.DeleteProfilesFromPublication
 PATCH   /publications/id/:id                    Publications.UpdatePublicationByID
 
-GET     /profiles/id/:id                        Profiles.GetProfileByID
-GET     /getUserData                            Profiles.GetUserData
-GET     /profile                                Profiles.ShowUserProfile
-GET     /profiles                               Profiles.GetAllProfiles
-GET     /login                                  Profiles.ShowLoginPage
-POST    /login                                  Profiles.Login
-GET     /logout                                 Profiles.Logout
-GET     /register                               Profiles.ShowRegisterPage
-POST    /register                               Profiles.VerifyAndCreateUser
-POST    /send-verification-code                 Profiles.SendVerificationCode
-GET     /settings                               Profiles.ShowSettingsPage
-POST    /profiles/:id/publications              Profiles.AddPublicationsToProfile
-POST    /profiles/:id/subscribers               Profiles.AddSubscribersToProfile
-DELETE  /profiles/id/:id                        Profiles.DeleteProfileByID
-DELETE  /profiles/login/:login                  Profiles.DeleteProfileByLogin
-DELETE  /profiles/:id/publications              Profiles.DeletePublicationsFromProfile
-DELETE  /profiles/:id/subscribers               Profiles.DeleteSubscribersFromProfile
-PATCH   /profiles/id/:id                        Profiles.UpdateProfileByID
-PATCH   /profiles/login/:login                  Profiles.UpdateProfileByLogin
+GET     /profiles/id/:id                            Profiles.GetProfileByID
+GET     /getUserData                                Profiles.GetUserData
+GET     /profile                                    Profiles.ShowUserProfile
+GET     /profiles                                   Profiles.GetAllProfiles
+GET     /login                                      Profiles.ShowLoginPage
+POST    /login                                      Profiles.Login
+GET     /logout                                     Profiles.Logout
+GET     /register                                   Profiles.ShowRegisterPage
+POST    /register                                   Profiles.VerifyAndCreateUser
+POST    /send-verification-code-for-register        Profiles.SendVerificationCodeForRegister
+POST    /send-verification-code-for-change-email    Profiles.SendVerificationCodeForChangeEmail
+POST    /settings/verify-and-change-email           Profiles.VerifyAndChangeEmail
+POST    /settings/stop-change-email                 Profiles.StopChangeEmail
+GET     /settings                                   Profiles.ShowSettingsPage
+POST    /profiles/:id/publications                  Profiles.AddPublicationsToProfile
+POST    /profiles/:id/subscribers                   Profiles.AddSubscribersToProfile
+DELETE  /profiles/id/:id                            Profiles.DeleteProfileByID
+DELETE  /profiles/login/:login                      Profiles.DeleteProfileByLogin
+DELETE  /profiles/:id/publications                  Profiles.DeletePublicationsFromProfile
+DELETE  /profiles/:id/subscribers                   Profiles.DeleteSubscribersFromProfile
+PATCH   /profiles/                                  Profiles.UpdateProfileByID
+PATCH   /profiles/login/:login                      Profiles.UpdateProfileByLogin
 
 # Ignore favicon requests
 GET     /favicon.ico                            404

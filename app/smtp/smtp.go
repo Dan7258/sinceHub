@@ -37,11 +37,11 @@ func InitSMTP() {
 	smtp_data.from = smtp_data.username
 }
 
-func SendMessage(email_to string, message string) error {
+func SendMessage(email_to string, subject string, message string) error {
 	e := email.NewEmail()
 	e.From = smtp_data.from
 	e.To = []string{email_to}
-	e.Subject = "Подтверждение почты"
+	e.Subject = subject
 	e.Text = []byte(message)
 	return e.SendWithTLS(
 		smtp_data.host+":"+smtp_data.port,
