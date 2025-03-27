@@ -168,12 +168,20 @@
         <input type="password" id="new_password" placeholder="Введите новый пароль">
         <label for="confirm_password">Подтвердите пароль</label>
         <input type="password" id="confirm_password" placeholder="Подтвердите новый пароль">
-        <button onclick="changePassword()">Изменить пароль</button>
+        <button id="changePasswordButton">Изменить пароль</button>
+        <div id="passwordCodeSection" style="display: none;">
+            <label for="password_verification_code">Код подтверждения</label>
+            <input type="text" id="password_verification_code" placeholder="Введите код">
+            <button id="verifyPasswordCodeButton">Подтвердить</button>
+            <button id="stopChangePasswordButton">Остановить изменение</button>
+        </div>
     </div>
 </div>
-
 <script>
     document.addEventListener("DOMContentLoaded", function() {
+        // Переменная для хранения текущего логина пользователя
+        let currentUserLogin = '';
+
         // Запрос данных пользователя
         fetch('/getUserData', { credentials: 'include' })
             .then(response => {
@@ -187,7 +195,6 @@
                 return response.json();
             })
             .then(data => {
-                // Заполняем placeholder текущими данными пользователя
                 document.getElementById('last_name').placeholder = data.last_name || 'Фамилия';
                 document.getElementById('first_name').placeholder = data.first_name || 'Имя';
                 document.getElementById('middle_name').placeholder = data.middle_name || 'Отчество';
@@ -196,6 +203,7 @@
                 document.getElementById('vac').placeholder = data.vac || 'ВАК';
                 document.getElementById('appointment').placeholder = data.appointment || 'Должность';
                 document.getElementById('new_login').placeholder = data.login || 'Текущий логин';
+                currentUserLogin = data.login || '';
             })
             .catch(error => {
                 console.error('Ошибка при загрузке данных пользователя:', error);
@@ -204,214 +212,242 @@
         // Логика для переключения видимости текущего пароля
         const togglePassword = document.getElementById('toggleCurrentPassword');
         const passwordInput = document.getElementById('current_password');
-
         togglePassword.addEventListener('click', function() {
             const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
             passwordInput.setAttribute('type', type);
-            // Меняем иконку в зависимости от состояния
             this.classList.toggle('fa-eye');
             this.classList.toggle('fa-eye-slash');
         });
-    });
 
-    // Обработчик нажатия на кнопку "Изменить логин"
-    const changeLoginButton = document.getElementById('changeLoginButton');
-    const codeSection = document.getElementById('codeSection');
-    const verifyCodeButton = document.getElementById('verifyCodeButton');
-    const stopChangeButton = document.getElementById('stopChangeButton');
+        // Обработчик для смены логина
+        const changeLoginButton = document.getElementById('changeLoginButton');
+        const codeSection = document.getElementById('codeSection');
+        const verifyCodeButton = document.getElementById('verifyCodeButton');
+        const stopChangeButton = document.getElementById('stopChangeButton');
 
-    changeLoginButton.addEventListener('click', function() {
-        const newLogin = document.getElementById('new_login').value.trim();
-
-        if (!newLogin) {
-            alert('Введите новый логин');
-            return;
-        }
-
-        // Отправка запроса на отправку кода подтверждения
-        fetch('/send-verification-code-for-change-email', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ login: newLogin }),
-            credentials: 'include'
-        })
-            .then(response => response.json())
-            .then(data => {
-                if (data.error) {
-                    alert(data.error);
-                } else {
-                    alert('Код подтверждения отправлен на вашу почту');
-                    codeSection.style.display = 'block'; // Показываем поле для ввода кода
-                }
-            })
-            .catch(error => {
-                console.error('Ошибка:', error);
-                alert('Ошибка при отправке кода подтверждения');
-            });
-    });
-
-    // Обработчик нажатия на кнопку "Подтвердить"
-    verifyCodeButton.addEventListener('click', function() {
-        const newLogin = document.getElementById('new_login').value.trim();
-        const verificationCode = document.getElementById('verification_code').value.trim();
-
-        if (!newLogin || !verificationCode) {
-            alert('Заполните все поля');
-            return;
-        }
-
-        // Отправка запроса на подтверждение кода и смену логина
-        fetch('/settings/verify-and-change-email', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                profile: { login: newLogin },
-                code: verificationCode
-            }),
-            credentials: 'include'
-        })
-            .then(response => {
-                if (response.ok) {
-                    alert('Логин успешно изменен');
-                    window.location.reload(); // Перезагружаем страницу
-                } else {
-                    alert('Ошибка при изменении логина');
-                }
-            })
-            .catch(error => {
-                console.error('Ошибка:', error);
-                alert('Ошибка при изменении логина');
-            });
-    });
-
-    // Обработчик нажатия на кнопку "Остановить изменение"
-    stopChangeButton.addEventListener('click', function() {
-        const newLogin = document.getElementById('new_login').value.trim();
-
-        if (!newLogin) {
-            alert('Нет данных для остановки изменения');
-            return;
-        }
-
-        // Отправка запроса на остановку изменения логина
-        fetch('/settings/stop-change-email', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                profile: { login: newLogin },
-                code: '' // Пустой код, так как он не требуется для остановки
-            }),
-            credentials: 'include'
-        })
-            .then(response => {
-                if (response.ok) {
-                    alert('Изменение логина остановлено');
-                    window.location.reload(); // Перезагружаем страницу
-                } else {
-                    alert('Ошибка при остановке изменения логина');
-                }
-            })
-            .catch(error => {
-                console.error('Ошибка:', error);
-                alert('Ошибка при остановке изменения логина');
-            });
-    });
-
-
-    // Функция для сбора непустых полей
-    function getNonEmptyFields() {
-        const fields = [
-            'last_name', 'first_name', 'middle_name', 'country',
-            'academic_degree', 'vac', 'appointment'
-        ];
-        const data = {};
-
-        fields.forEach(field => {
-            const value = document.getElementById(field).value.trim();
-            if (value) {
-                data[field] = value;
+        changeLoginButton.addEventListener('click', function() {
+            const newLogin = document.getElementById('new_login').value.trim();
+            if (!newLogin) {
+                alert('Введите новый логин');
+                return;
             }
+            fetch('/send-verification-code-for-change-email', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ login: newLogin }),
+                credentials: 'include'
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        alert(data.error);
+                    } else {
+                        alert('Код подтверждения отправлен на вашу почту');
+                        codeSection.style.display = 'block';
+                    }
+                })
+                .catch(error => {
+                    console.error('Ошибка:', error);
+                    alert('Ошибка при отправке кода подтверждения');
+                });
         });
 
-        return data;
-    }
+        verifyCodeButton.addEventListener('click', function() {
+            const newLogin = document.getElementById('new_login').value.trim();
+            const verificationCode = document.getElementById('verification_code').value.trim();
+            if (!newLogin || !verificationCode) {
+                alert('Заполните все поля');
+                return;
+            }
+            fetch('/settings/verify-and-change-email', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ profile: { login: newLogin }, code: verificationCode }),
+                credentials: 'include'
+            })
+                .then(response => {
+                    if (response.ok) {
+                        alert('Логин успешно изменен');
+                        window.location.reload();
+                    } else {
+                        alert('Ошибка при изменении логина');
+                    }
+                })
+                .catch(error => {
+                    console.error('Ошибка:', error);
+                    alert('Ошибка при изменении логина');
+                });
+        });
 
-    // Обработчик нажатия на кнопку "Сохранить"
-    document.getElementById('saveProfileButton').addEventListener('click', function() {
-        const nonEmptyFields = getNonEmptyFields();
+        stopChangeButton.addEventListener('click', function() {
+            const newLogin = document.getElementById('new_login').value.trim();
+            if (!newLogin) {
+                alert('Нет данных для остановки изменения');
+                return;
+            }
+            fetch('/settings/stop-change-email', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ profile: { login: newLogin }, code: '' }),
+                credentials: 'include'
+            })
+                .then(response => {
+                    if (response.ok) {
+                        alert('Изменение логина остановлено');
+                        window.location.reload();
+                    } else {
+                        alert('Ошибка при остановке изменения логина');
+                    }
+                })
+                .catch(error => {
+                    console.error('Ошибка:', error);
+                    alert('Ошибка при остановке изменения логина');
+                });
+        });
 
-        if (Object.keys(nonEmptyFields).length === 0) {
-            alert('Нет данных для сохранения');
-            return;
-        }
-
-        // Отправка данных на сервер
-        fetch('/profiles/', {
-            method: 'PATCH',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(nonEmptyFields),
-            credentials: 'include'
-        })
-            .then(response => {
-                if (response.ok) {
-                    alert('Данные успешно обновлены');
-                    window.location.reload(); // Перезагружаем страницу
-                } else {
+        // Обработчик для сохранения профиля
+        document.getElementById('saveProfileButton').addEventListener('click', function() {
+            const nonEmptyFields = getNonEmptyFields();
+            if (Object.keys(nonEmptyFields).length === 0) {
+                alert('Нет данных для сохранения');
+                return;
+            }
+            fetch('/profiles/', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(nonEmptyFields),
+                credentials: 'include'
+            })
+                .then(response => {
+                    if (response.ok) {
+                        alert('Данные успешно обновлены');
+                        window.location.reload();
+                    } else {
+                        alert('Ошибка при обновлении данных');
+                    }
+                })
+                .catch(error => {
+                    console.error('Ошибка:', error);
                     alert('Ошибка при обновлении данных');
+                });
+        });
+
+        function getNonEmptyFields() {
+            const fields = ['last_name', 'first_name', 'middle_name', 'country', 'academic_degree', 'vac', 'appointment'];
+            const data = {};
+            fields.forEach(field => {
+                const value = document.getElementById(field).value.trim();
+                if (value) {
+                    data[field] = value;
                 }
-            })
-            .catch(error => {
-                console.error('Ошибка:', error);
-                alert('Ошибка при обновлении данных');
             });
-    });
-
-
-    // Функция для смены пароля
-    function changePassword() {
-        const currentPassword = document.getElementById('current_password').value;
-        const newPassword = document.getElementById('new_password').value;
-        const confirmPassword = document.getElementById('confirm_password').value;
-
-        if (!currentPassword || !newPassword || !confirmPassword) {
-            alert('Заполните все поля');
-            return;
+            return data;
         }
 
-        if (newPassword !== confirmPassword) {
-            alert('Новый пароль и подтверждение не совпадают');
-            return;
-        }
+        // Обработчик для смены пароля
+        const changePasswordButton = document.getElementById('changePasswordButton');
+        const passwordCodeSection = document.getElementById('passwordCodeSection');
+        const verifyPasswordCodeButton = document.getElementById('verifyPasswordCodeButton');
+        const stopChangePasswordButton = document.getElementById('stopChangePasswordButton');
 
-        fetch('/changePassword', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ currentPassword, newPassword }),
-            credentials: 'include'
-        })
-            .then(response => {
-                if (response.ok) {
-                    alert('Пароль успешно изменен');
-                    window.location.reload();
-                } else {
+        changePasswordButton.addEventListener('click', function() {
+            const currentPassword = document.getElementById('current_password').value;
+            const newPassword = document.getElementById('new_password').value;
+            const confirmPassword = document.getElementById('confirm_password').value;
+
+            if (!currentPassword || !newPassword || !confirmPassword) {
+                alert('Заполните все поля');
+                return;
+            }
+            if (newPassword !== confirmPassword) {
+                alert('Новый пароль и подтверждение не совпадают');
+                return;
+            }
+            if (newPassword === currentPassword) {
+                alert('Новый пароль не должен совпадать с текущим паролем');
+                return;
+            }
+            if (!currentUserLogin) {
+                alert('Не удалось определить текущий логин. Попробуйте перезагрузить страницу.');
+                return;
+            }
+
+            fetch('/send-verification-code-for-change-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ login: currentUserLogin }),
+                credentials: 'include'
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Ошибка сервера: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.error) {
+                        alert(data.error);
+                    } else {
+                        alert('Код подтверждения отправлен на вашу почту');
+                        passwordCodeSection.style.display = 'block';
+                    }
+                })
+                .catch(error => {
+                    console.error('Ошибка при отправке кода:', error);
+                    alert('Ошибка при отправке кода подтверждения');
+                });
+        });
+
+        verifyPasswordCodeButton.addEventListener('click', function() {
+            const newPassword = document.getElementById('new_password').value;
+            const verificationCode = document.getElementById('password_verification_code').value.trim();
+
+            if (!newPassword || !verificationCode) {
+                alert('Заполните все поля');
+                return;
+            }
+
+            fetch('/settings/verify-and-change-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ profile: { password: newPassword }, code: verificationCode }),
+                credentials: 'include'
+            })
+                .then(response => {
+                    if (response.ok) {
+                        alert('Пароль успешно изменен');
+                        window.location.reload();
+                    } else {
+                        alert('Ошибка при изменении пароля');
+                    }
+                })
+                .catch(error => {
+                    console.error('Ошибка:', error);
                     alert('Ошибка при изменении пароля');
-                }
+                });
+        });
+
+        stopChangePasswordButton.addEventListener('click', function() {
+            fetch('/settings/stop-change-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ profile: {}, code: '' }),
+                credentials: 'include'
             })
-            .catch(error => {
-                console.error('Ошибка:', error);
-                alert('Ошибка при изменении пароля');
-            });
-    }
+                .then(response => {
+                    if (response.ok) {
+                        alert('Изменение пароля остановлено');
+                        window.location.reload();
+                    } else {
+                        alert('Ошибка при остановке изменения пароля');
+                    }
+                })
+                .catch(error => {
+                    console.error('Ошибка:', error);
+                    alert('Ошибка при остановке изменения пароля');
+                });
+        });
+    });
 </script>
 </body>
 </html>

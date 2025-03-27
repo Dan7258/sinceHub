@@ -38,8 +38,11 @@ GET     /register                                   Profiles.ShowRegisterPage
 POST    /register                                   Profiles.VerifyAndCreateUser
 POST    /send-verification-code-for-register        Profiles.SendVerificationCodeForRegister
 POST    /send-verification-code-for-change-email    Profiles.SendVerificationCodeForChangeEmail
+POST    /send-verification-code-for-change-password Profiles.SendVerificationCodeForChangePassword
 POST    /settings/verify-and-change-email           Profiles.VerifyAndChangeEmail
+POST    /settings/verify-and-change-password        Profiles.VerifyAndChangePassword
 POST    /settings/stop-change-email                 Profiles.StopChangeEmail
+POST    /settings/stop-change-password              Profiles.StopChangePassword
 GET     /settings                                   Profiles.ShowSettingsPage
 POST    /profiles/:id/publications                  Profiles.AddPublicationsToProfile
 POST    /profiles/:id/subscribers                   Profiles.AddSubscribersToProfile
