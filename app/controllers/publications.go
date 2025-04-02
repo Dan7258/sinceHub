@@ -4,6 +4,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/revel/revel"
 	"net/http"
+	"sinceHub/app/middleware"
 	"sinceHub/app/models"
 )
 
@@ -33,7 +34,15 @@ func (p Publications) CreatePublication() revel.Result {
 	}
 
 	p.Response.Status = http.StatusCreated
-	return p.RenderJSON(map[string]int{"status": http.StatusCreated})
+	return p.Redirect("/profile")
+}
+
+func (p Publications) ShowCreatePublicationPage() revel.Result {
+	_, err := middleware.ValidateJWT(p.Request, "auth_token")
+	if err != nil {
+		return p.Redirect("/login")
+	}
+	return p.RenderTemplate("create_publication.html")
 }
 
 func (p Publications) GetPublicationByID(id uint64) revel.Result {

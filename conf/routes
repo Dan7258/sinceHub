@@ -19,7 +19,8 @@ PATCH   /tags/id/:id                            Tags.UpdateTagByID
 GET     /publications/id/:id                    Publications.GetPublicationByID
 GET     /                                       Publications.ShowPublications
 GET     /getPublicationsData                    Publications.GetPublicationsData
-POST    /publications                           Publications.CreatePublication
+GET     /create-publication                     Publications.ShowCreatePublicationPage
+POST    /create-publication                     Publications.CreatePublication
 POST    /publications/:id/tags                  Publications.AddTagsToPublication
 POST    /publications/:id/profiles              Publications.AddProfilesToPublication
 DELETE  /publications/id/:id                    Publications.DeletePublicationByID

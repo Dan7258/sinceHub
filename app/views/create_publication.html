@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Создать публикацию</title>
+  <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f5f5f5;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 800px;
+      margin: 20px auto;
+      padding: 20px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #333;
+      margin-bottom: 20px;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
+    input[type="text"], textarea, select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+    textarea {
+      min-height: 150px;
+      resize: vertical;
+    }
+    .required:after {
+      content: " *";
+      color: red;
+    }
+    .btn {
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    .btn:hover {
+      background-color: #45a049;
+    }
+    .ts-wrapper {
+      margin-bottom: 20px;
+    }
+    .loading {
+      color: #666;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+{{template "header.html" .}}
+
+<div class="container">
+  <h1>Создать новую публикацию</h1>
+
+  <form id="publicationForm">
+    <div class="form-group">
+      <label for="title" class="required">Заголовок статьи</label>
+      <input type="text" id="title" name="title" required minlength="2" maxlength="1000">
+    </div>
+
+    <div class="form-group">
+      <label for="abstract">Краткое описание</label>
+      <textarea id="abstract" name="abstract" maxlength="1000"></textarea>
+    </div>
+
+    <div class="form-group">
+      <label for="content" class="required">Содержание статьи</label>
+      <textarea id="content" name="content" required minlength="2"></textarea>
+    </div>
+
+    <div class="form-group">
+      <label for="coauthors">Соавторы</label>
+      <select id="coauthors" name="coauthors[]" multiple placeholder="Выберите соавторов..."></select>
+    </div>
+
+    <div class="form-group">
+      <label for="tags">Теги</label>
+      <select id="tags" name="tags[]" multiple placeholder="Выберите теги..."></select>
+    </div>
+
+    <button type="submit" class="btn">Опубликовать</button>
+  </form>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Инициализация выбора тегов
+    const tagsSelect = new TomSelect('#tags', {
+      valueField: 'id',
+      labelField: 'name',
+      searchField: 'name',
+      create: true,
+      load: function(query, callback) {
+        fetch('/tags')
+                .then(response => response.json())
+                .then(json => {
+                  callback(json);
+                })
+                .catch(() => {
+                  callback();
+                });
+      },
+      render: {
+        option: function(item, escape) {
+          return `<div>${escape(item.name)}</div>`;
+        },
+        item: function(item, escape) {
+          return `<div>${escape(item.name)}</div>`;
+        }
+      }
+    });
+
+    // Инициализация выбора соавторов
+    const coauthorsSelect = new TomSelect('#coauthors', {
+      valueField: 'id',
+      labelField: 'name',
+      searchField: 'name',
+      placeholder: 'Выберите соавторов...',
+      load: function(query, callback) {
+        // Здесь можно добавить загрузку списка пользователей для соавторов
+        // fetch('/users?q=' + encodeURIComponent(query))
+        //     .then(response => response.json())
+        //     .then(json => {
+        //         callback(json);
+        //     })
+        //     .catch(() => {
+        //         callback();
+        //     });
+      },
+      render: {
+        option: function(item, escape) {
+          return `<div>${escape(item.name)}</div>`;
+        },
+        item: function(item, escape) {
+          return `<div>${escape(item.name)}</div>`;
+        }
+      }
+    });
+
+    // Обработка отправки формы
+    document.getElementById('publicationForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const formData = {
+        title: document.getElementById('title').value,
+        abstract: document.getElementById('abstract').value,
+        content: document.getElementById('content').value,
+        tags: tagsSelect.getValue(),
+        coauthors: coauthorsSelect.getValue()
+      };
+
+      // Отправка данных на сервер
+      fetch('/create-publication', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+        credentials: 'include'
+      })
+              .then(response => response.json())
+              .then(data => {
+                if (data.id) {
+                  window.location.href = '/publications/' + data.id;
+                } else {
+                  alert('Ошибка при создании публикации: ' + (data.error || 'Неизвестная ошибка'));
+                }
+              })
+              .catch(error => {
+                console.error('Error:', error);
+                alert('Произошла ошибка при отправке формы');
+              });
+    });
+  });
+</script>
+</body>
+</html>
