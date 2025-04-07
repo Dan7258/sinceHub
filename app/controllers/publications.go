@@ -25,14 +25,6 @@ func (p Publications) CreatePublication() revel.Result {
 	pub := new(models.Publications)
 	pub.Title = p.Params.Get("title")
 	pub.Abstract = p.Params.Get("abstract")
-	rawTagIDs := p.Params.Values["tags[]"]
-
-	tagIDs := make([]uint64, 0)
-	for _, rawTagID := range rawTagIDs {
-		tagID, _ := strconv.ParseUint(rawTagID, 10, 64)
-		tagIDs = append(tagIDs, tagID)
-	}
-
 	validate := validator.New()
 	err = validate.Struct(pub)
 	if err != nil {
@@ -68,7 +60,21 @@ func (p Publications) CreatePublication() revel.Result {
 		return p.RenderJSON(map[string]string{"error": "Ошибка при сохранении файла"})
 	}
 	pub.FileLink = filePath
-	err = models.CreatePublication(pub, tagIDs)
+
+	rawTagIDs := p.Params.Values["tags[]"]
+	tagIDs := make(map[uint64]interface{}, 0)
+	for _, ID := range rawTagIDs {
+		tagID, _ := strconv.ParseUint(ID, 10, 64)
+		tagIDs[tagID] = nil
+	}
+	rawCoauthors := p.Params.Values["coauthors[]"]
+	coauthorIDs := make(map[uint64]interface{}, 0)
+	coauthorIDs[userID] = nil
+	for _, ID := range rawCoauthors {
+		coauthorID, _ := strconv.ParseUint(ID, 10, 64)
+		coauthorIDs[coauthorID] = nil
+	}
+	err = models.CreatePublication(pub, tagIDs, coauthorIDs)
 
 	if err != nil {
 		p.Response.Status = http.StatusInternalServerError

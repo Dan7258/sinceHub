@@ -16,14 +16,28 @@ type Publications struct {
 	Tags      []Tags     `json:"tags" gorm:"many2many:publication_tags;"`
 }
 
-func CreatePublication(pub *Publications, tagIDs []uint64) error {
+func CreatePublication(pub *Publications, tagsMap map[uint64]interface{}, coauthorMap map[uint64]interface{}) error {
 	result := DB.Create(pub)
 	if result.Error != nil {
 		return result.Error
 	}
 	var tags []Tags
+	tagIDs := make([]uint64, 0)
+	for tagID := range tagsMap {
+		tagIDs = append(tagIDs, tagID)
+	}
 	result = DB.Find(&tags, tagIDs)
 	DB.Model(pub).Association("Tags").Append(tags)
+	if result.Error != nil {
+		return result.Error
+	}
+	var profiles []Profiles
+	coauthorIDs := make([]uint64, 0)
+	for coauthorID := range coauthorMap {
+		coauthorIDs = append(coauthorIDs, coauthorID)
+	}
+	result = DB.Find(&profiles, coauthorIDs)
+	DB.Model(pub).Association("Profiles").Append(profiles)
 	if result.Error != nil {
 		return result.Error
 	}
