@@ -15,8 +15,8 @@ type Publications struct {
 	UpdatedAt time.Time  `json:"updated_at"`
 	OwnerID   uint64     `json:"owner_id" gorm:"not null"`
 	Owner     *Profiles  `json:"owner" gorm:"foreignKey:OwnerID"`
-	Profiles  []Profiles `json:"profiles" gorm:"many2many:profile_publications;"`
-	Tags      []Tags     `json:"tags" gorm:"many2many:publication_tags;"`
+	Profiles  []Profiles `json:"profiles" gorm:"many2many:profile_publications;constraint:OnDelete:CASCADE"`
+	Tags      []Tags     `json:"tags" gorm:"many2many:publication_tags;constraint:OnDelete:CASCADE"`
 }
 
 func CreatePublication(pub *Publications, tagIDs []uint64, coauthorIDs []uint64) error {
@@ -39,7 +39,7 @@ func CreatePublication(pub *Publications, tagIDs []uint64, coauthorIDs []uint64)
 	return nil
 }
 
-func DeletePublicationByID(ID int) error {
+func DeletePublicationByID(ID uint64) error {
 	result := DB.Delete(new(Publications), ID)
 	if result.Error != nil {
 		return result.Error
@@ -50,13 +50,22 @@ func DeletePublicationByID(ID int) error {
 	return nil
 }
 
-func UpdatePublicationByID(ID int, updPub *Publications) error {
-	result := DB.Model(new(Publications)).Where("id = ?", ID).Updates(updPub)
+func UpdatePublication(pub *Publications, tagIDs []uint64, coauthorIDs []uint64) error {
+	result := DB.Model(new(Publications)).Where("id = ?", pub.ID).Updates(pub)
+	if result.Error != nil {
+		return fmt.Errorf("Публикация с ID %d не найден", pub.ID)
+	}
+	var tags []Tags
+	result = DB.Find(&tags, tagIDs)
+	DB.Model(pub).Association("Tags").Replace(tags)
 	if result.Error != nil {
 		return result.Error
 	}
-	if result.RowsAffected == 0 {
-		return fmt.Errorf("Публикация с ID %d не найден", ID)
+	var profiles []Profiles
+	result = DB.Find(&profiles, coauthorIDs)
+	DB.Model(pub).Association("Profiles").Replace(profiles)
+	if result.Error != nil {
+		return result.Error
 	}
 	return nil
 }

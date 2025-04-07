@@ -35,14 +35,14 @@ CREATE TABLE friend_requests (
 );
 
 CREATE TABLE publication_tags (
-    publications_id INTEGER REFERENCES publications(id),
-    tags_id INTEGER REFERENCES tags(id),
+    publications_id INTEGER REFERENCES publications(id) ON DELETE CASCADE,
+    tags_id INTEGER REFERENCES tags(id) ON DELETE CASCADE,
     PRIMARY KEY (publications_id, tags_id)
 );
 
 CREATE TABLE profile_publications (
-    profiles_id INTEGER REFERENCES profiles(id),
-    publications_id INTEGER REFERENCES publications(id),
+    profiles_id INTEGER REFERENCES profiles(id) ON DELETE CASCADE,
+    publications_id INTEGER REFERENCES publications(id) ON DELETE CASCADE,
     PRIMARY KEY (profiles_id, publications_id)
 );
 

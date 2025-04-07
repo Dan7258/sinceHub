@@ -16,17 +16,17 @@ DELETE  /tags/id/:id                            Tags.DeleteTagByID
 DELETE  /tags/:id/publications                  Tags.DeletePublicationsFromTag
 PATCH   /tags/id/:id                            Tags.UpdateTagByID
 
-GET     /publications/id/:id                    Publications.GetPublicationByID
 GET     /                                       Publications.ShowPublications
 GET     /getPublicationsData                    Publications.GetPublicationsData
 GET     /create-publication                     Publications.ShowCreatePublicationPage
 POST    /create-publication                     Publications.CreatePublication
 POST    /publications/:id/tags                  Publications.AddTagsToPublication
 POST    /publications/:id/profiles              Publications.AddProfilesToPublication
-DELETE  /publications/id/:id                    Publications.DeletePublicationByID
-DELETE  /publications/:id/tags                  Publications.DeleteTagsFromPublication
+DELETE  /delete-publication                     Publications.DeletePublication
 DELETE  /publications/delete-author             Publications.DeleteAuthorFromPublication
-PATCH   /publications/id/:id                    Publications.UpdatePublicationByID
+GET     /update-publication                     Publications.ShowUpdatePublicationPage
+GET     /update-publication/:id                 Publications.GetPublicationData
+PATCH   /update-publication                     Publications.UpdatePublication
 
 GET     /profiles/id/:id                            Profiles.GetProfileByID
 GET     /getUserData                                Profiles.GetUserData

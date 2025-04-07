@@ -172,25 +172,28 @@
 
                             <div style="margin: 10px 0;">
                                 <strong>Соавторы:</strong> ${
-                                                    pub.profiles && pub.profiles.length > 0
-                                                        ? pub.profiles.map(p => `${p.first_name || ''} ${p.last_name || ''}`.trim()).join(', ')
-                                                        : 'Соавторы не указаны'
-                                                }
+                                    pub.profiles && pub.profiles.length > 0
+                                        ? pub.profiles
+                                        .filter(p => p.id !== data.id) // 🔥 исключаем текущего юзера
+                                        .map(p => `${p.first_name || ''} ${p.last_name || ''}`.trim())
+                                        .join(', ') || 'Соавторы не указаны'
+                                        : 'Соавторы не указаны'
+                                }
                             </div>
 
                             <div style="margin: 10px 0;">
                                 <strong>Теги:</strong> ${
-                                                    pub.tags && pub.tags.length > 0
-                                                        ? pub.tags.map(tag => `<span style="background:#3498db; color:white; padding:3px 8px; border-radius:12px; margin-right:5px;">${tag.name}</span>`).join(' ')
-                                                        : 'Теги не указаны'
-                                                }
+                                    pub.tags && pub.tags.length > 0
+                                        ? pub.tags.map(tag => `<span style="background:#3498db; color:white; padding:3px 8px; border-radius:12px; margin-right:5px;">${tag.name}</span>`).join(' ')
+                                        : 'Теги не указаны'
+                                }
                             </div>
 
                             <div style="margin-top: 10px;">
                                 ${pub.file_link ? `<a href="${pub.file_link}" target="_blank" style="margin-right: 15px; color:#2980b9; text-decoration: none;">📄 Скачать статью (PDF)</a>` : ''}
                                 ${
                                                             isOwner
-                                                                ? `<a href="/edit-publication?id=${pub.id}" style="color: #e67e22; text-decoration: none; margin-right: 15px;">✏️ Редактировать</a>`
+                                                                ? `<a href="/update-publication?id=${pub.id}" style="color: #e67e22; text-decoration: none; margin-right: 15px;">✏️ Редактировать</a>`
                                                                 : `<button onclick="notMyPublication(${pub.id})" style="padding: 5px 10px; border: none; background: #e74c3c; color: #fff; border-radius: 5px; cursor: pointer;">❌ Я не являюсь соавтором</button>`
                                                         }
                             </div>
@@ -244,21 +247,7 @@
             });
         });
 
-        function deletePublication(id) {
-            if (!confirm("Вы уверены, что хотите удалить эту публикацию?")) return;
-            fetch(`/delete-publication?id=${id}`, {
-                method: 'DELETE',
-                credentials: 'include'
-            })
-                .then(res => {
-                    if (res.ok) {
-                        alert("Публикация удалена");
-                        location.reload();
-                    } else {
-                        alert("Ошибка при удалении публикации");
-                    }
-                });
-        }
+
 
         function notMyPublication(publicationId) {
             const confirmed = confirm("Вы точно не являетесь соавтором публикации?");
