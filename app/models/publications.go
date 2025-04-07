@@ -9,15 +9,21 @@ type Publications struct {
 	ID        uint64     `json:"id" gorm:"primaryKey"`
 	Title     string     `json:"title" gorm:"size:1000;not null" validate:"omitempty,min=2,max=1000"`
 	Abstract  string     `json:"abstract" gorm:"size:1000;" validate:"omitempty,min=2"`
-	Content   string     `json:"content" gorm:"type:text;not null" validate:"omitempty,min=2"`
+	FileLink  string     `json:"file_link" gorm:"not null"`
 	CreatedAt time.Time  `json:"created_at"`
 	UpdatedAt time.Time  `json:"updated_at"`
 	Profiles  []Profiles `json:"profiles" gorm:"many2many:profile_publications;"`
 	Tags      []Tags     `json:"tags" gorm:"many2many:publication_tags;"`
 }
 
-func CreatePublication(pub *Publications) error {
+func CreatePublication(pub *Publications, tagIDs []uint64) error {
 	result := DB.Create(pub)
+	if result.Error != nil {
+		return result.Error
+	}
+	var tags []Tags
+	result = DB.Find(&tags, tagIDs)
+	DB.Model(pub).Association("Tags").Append(tags)
 	if result.Error != nil {
 		return result.Error
 	}
@@ -65,6 +71,7 @@ func GetAllPublications() ([]Publications, error) {
 }
 
 func AddTagsToPublication(ID uint64, tagIDs []uint64) error {
+
 	pub := new(Publications)
 	var tags []Tags
 	result := DB.First(pub, ID)

@@ -2,7 +2,7 @@ FROM postgres:latest
 
 ENV POSTGRES_USER=admin
 ENV POSTGRES_PASSWORD=admin
-ENV POSTGRES_DB=sinceHubDB
+ENV POSTGRES_DB=scinceHubDB
 
 COPY init.sql /docker-entrypoint-initdb.d/
 

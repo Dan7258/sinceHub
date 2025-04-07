@@ -14,8 +14,8 @@ CREATE TABLE profiles (
 CREATE TABLE publications (
     id SERIAL PRIMARY KEY,
     title VARCHAR(1000) NOT NULL,
-    abstract VARCHAR(1000),
-    content TEXT NOT NULL,
+    abstract VARCHAR(1000) NOT NULL,
+    file_link VARCHAR(1000) NOT NULL,
     created_at DATE NOT NULL,
     updated_at DATE NOT NULL
 );

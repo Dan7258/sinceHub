@@ -95,22 +95,24 @@
                         data.forEach(pub => {
                             const div = document.createElement('div');
                             div.className = 'publication';
+
                             const title = document.createElement('h2');
                             title.innerText = pub.title || 'Без названия';
                             div.appendChild(title);
+
                             const abstract = document.createElement('p');
                             abstract.className = 'abstract';
                             abstract.innerText = pub.abstract || 'Абстракт не указан';
                             div.appendChild(abstract);
-                            const content = document.createElement('p');
-                            content.innerText = pub.content || 'Содержание не указано';
-                            div.appendChild(content);
+
                             const created = document.createElement('p');
                             created.innerText = 'Создано: ' + (pub.created_at ? new Date(pub.created_at).toLocaleString() : 'Не указано');
                             div.appendChild(created);
+
                             const updated = document.createElement('p');
                             updated.innerText = 'Обновлено: ' + (pub.updated_at ? new Date(pub.updated_at).toLocaleString() : 'Не указано');
                             div.appendChild(updated);
+
                             const profiles = document.createElement('div');
                             profiles.className = 'profiles';
                             profiles.innerText = 'Авторы: ';
@@ -124,6 +126,7 @@
                                 profiles.innerText += 'Авторы не указаны';
                             }
                             div.appendChild(profiles);
+
                             const tags = document.createElement('div');
                             tags.className = 'tags';
                             tags.innerText = 'Теги: ';
@@ -137,6 +140,18 @@
                                 tags.innerText += 'Теги не указаны';
                             }
                             div.appendChild(tags);
+
+                            if (pub.file_link) {
+                                const downloadLink = document.createElement('a');
+                                downloadLink.href = pub.file_link;
+                                downloadLink.innerText = '📄 Скачать статью (PDF)';
+                                downloadLink.target = '_blank';
+                                downloadLink.style.display = 'inline-block';
+                                downloadLink.style.marginTop = '10px';
+                                downloadLink.style.color = '#2980b9';
+                                div.appendChild(downloadLink);
+                            }
+
                             publicationsContainer.appendChild(div);
                         });
                     } else {

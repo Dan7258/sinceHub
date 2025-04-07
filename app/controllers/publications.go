@@ -1,11 +1,15 @@
 package controllers
 
 import (
+	"fmt"
 	"github.com/go-playground/validator/v10"
 	"github.com/revel/revel"
+	"io"
 	"net/http"
+	"os"
 	"sinceHub/app/middleware"
 	"sinceHub/app/models"
+	"strconv"
 )
 
 type Publications struct {
@@ -13,12 +17,22 @@ type Publications struct {
 }
 
 func (p Publications) CreatePublication() revel.Result {
-	pub := new(models.Publications)
-	err := p.Params.BindJSON(pub)
+	userID, err := middleware.ValidateJWT(p.Request, "auth_token")
 	if err != nil {
-		p.Response.Status = http.StatusBadRequest
-		return p.RenderJSON(map[string]string{"error": err.Error()})
+		//p.Response.Status = http.StatusUnauthorized
+		return p.Redirect("/login")
 	}
+	pub := new(models.Publications)
+	pub.Title = p.Params.Get("title")
+	pub.Abstract = p.Params.Get("abstract")
+	rawTagIDs := p.Params.Values["tags[]"]
+
+	tagIDs := make([]uint64, 0)
+	for _, rawTagID := range rawTagIDs {
+		tagID, _ := strconv.ParseUint(rawTagID, 10, 64)
+		tagIDs = append(tagIDs, tagID)
+	}
+
 	validate := validator.New()
 	err = validate.Struct(pub)
 	if err != nil {
@@ -26,7 +40,35 @@ func (p Publications) CreatePublication() revel.Result {
 		return p.RenderJSON(map[string]string{"error": err.Error()})
 	}
 
-	err = models.CreatePublication(pub)
+	fileHeader, ok := p.Params.Files["file"]
+	if !ok || len(fileHeader) == 0 {
+		p.Response.Status = http.StatusBadRequest
+		return p.RenderJSON(map[string]string{"error": "No file uploaded"})
+	}
+
+	file, err := fileHeader[0].Open()
+	if err != nil {
+		p.Response.Status = http.StatusInternalServerError
+		return p.RenderJSON(map[string]string{"error": "Не удалось открыть файл"})
+	}
+	defer file.Close()
+
+	randomNumber, _ := Profiles{}.generateRandomNumber()
+	filePath := fmt.Sprintf("public/uploads/%d_%s_%s", userID, randomNumber, fileHeader[0].Filename)
+	dst, err := os.Create(filePath)
+	if err != nil {
+		p.Response.Status = http.StatusInternalServerError
+		return p.RenderJSON(map[string]string{"error": "Не удалось сохранить файл"})
+	}
+	defer dst.Close()
+
+	_, err = io.Copy(dst, file)
+	if err != nil {
+		p.Response.Status = http.StatusInternalServerError
+		return p.RenderJSON(map[string]string{"error": "Ошибка при сохранении файла"})
+	}
+	pub.FileLink = filePath
+	err = models.CreatePublication(pub, tagIDs)
 
 	if err != nil {
 		p.Response.Status = http.StatusInternalServerError
@@ -34,8 +76,13 @@ func (p Publications) CreatePublication() revel.Result {
 	}
 
 	p.Response.Status = http.StatusCreated
+
 	return p.Redirect("/profile")
 }
+
+//func (p Publications) getPublicationFile(name string) revel.Result {
+//
+//}
 
 func (p Publications) ShowCreatePublicationPage() revel.Result {
 	_, err := middleware.ValidateJWT(p.Request, "auth_token")

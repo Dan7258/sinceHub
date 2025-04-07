@@ -14,7 +14,7 @@
     }
     .container {
       max-width: 800px;
-      margin: 20px auto;
+      margin: 100px auto 20px;
       padding: 20px;
       background: white;
       border-radius: 8px;
@@ -32,7 +32,7 @@
       margin-bottom: 8px;
       font-weight: bold;
     }
-    input[type="text"], textarea, select {
+    input[type="text"], textarea, select, input[type="file"] {
       width: 100%;
       padding: 10px;
       border: 1px solid #ddd;
@@ -66,6 +66,16 @@
       color: #666;
       font-style: italic;
     }
+    .file-info {
+      margin-top: 5px;
+      font-size: 14px;
+      color: #666;
+    }
+    .error {
+      color: red;
+      font-size: 14px;
+      margin-top: 5px;
+    }
   </style>
 </head>
 <body>
@@ -74,7 +84,7 @@
 <div class="container">
   <h1>Создать новую публикацию</h1>
 
-  <form id="publicationForm">
+  <form id="publicationForm" action="/create-publication" method="POST" enctype="multipart/form-data">
     <div class="form-group">
       <label for="title" class="required">Заголовок статьи</label>
       <input type="text" id="title" name="title" required minlength="2" maxlength="1000">
@@ -86,8 +96,10 @@
     </div>
 
     <div class="form-group">
-      <label for="content" class="required">Содержание статьи</label>
-      <textarea id="content" name="content" required minlength="2"></textarea>
+      <label for="file" class="required">Файл статьи (PDF)</label>
+      <input type="file" id="file" name="file" accept=".pdf" required>
+      <div class="file-info" id="fileInfo">Файл не выбран</div>
+      <div class="error" id="fileError"></div>
     </div>
 
     <div class="form-group">
@@ -107,6 +119,30 @@
 <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
 <script>
   document.addEventListener('DOMContentLoaded', function() {
+    // Элементы для работы с файлом
+    const fileInput = document.getElementById('file');
+    const fileInfo = document.getElementById('fileInfo');
+    const fileError = document.getElementById('fileError');
+
+    // Обработчик изменения файла
+    fileInput.addEventListener('change', function() {
+      const file = this.files[0];
+      if (file) {
+        // Проверка формата файла
+        if (file.type !== 'application/pdf') {
+          fileError.textContent = 'Ошибка: разрешены только PDF-файлы';
+          this.value = '';
+          fileInfo.textContent = 'Файл не выбран';
+          return;
+        }
+
+        fileError.textContent = '';
+        fileInfo.textContent = `Выбран файл: ${file.name} (${(file.size / 1024).toFixed(2)} KB)`;
+      } else {
+        fileInfo.textContent = 'Файл не выбран';
+      }
+    });
+
     // Инициализация выбора тегов
     const tagsSelect = new TomSelect('#tags', {
       valueField: 'id',
@@ -136,27 +172,41 @@
     // Инициализация выбора соавторов
     const coauthorsSelect = new TomSelect('#coauthors', {
       valueField: 'id',
-      labelField: 'name',
-      searchField: 'name',
+      labelField: 'fullName',
+      searchField: ['id', 'lastName', 'firstName', 'middleName'],
       placeholder: 'Выберите соавторов...',
       load: function(query, callback) {
-        // Здесь можно добавить загрузку списка пользователей для соавторов
-        // fetch('/users?q=' + encodeURIComponent(query))
-        //     .then(response => response.json())
-        //     .then(json => {
-        //         callback(json);
-        //     })
-        //     .catch(() => {
-        //         callback();
-        //     });
+        fetch('/get-all-user-id-and-names')
+                .then(response => response.json())
+                .then(users => {
+                  // Форматируем данные для TomSelect
+                  const formattedUsers = users.map(user => ({
+                    id: user.id,
+                    fullName: `${user.last_name} ${user.first_name} ${user.middle_name || ''}`.trim(),
+                    lastName: user.last_name,
+                    firstName: user.first_name,
+                    middleName: user.middle_name
+                  }));
+                  callback(formattedUsers);
+                })
+                .catch(error => {
+                  console.error('Ошибка загрузки пользователей:', error);
+                  callback();
+                });
       },
       render: {
         option: function(item, escape) {
-          return `<div>${escape(item.name)}</div>`;
+          return `<div>${escape(item.fullName)}</div>`;
         },
         item: function(item, escape) {
-          return `<div>${escape(item.name)}</div>`;
+          return `<div>${escape(item.fullName)}</div>`;
+        },
+        no_results: function(data, escape) {
+          return '<div class="no-results">Пользователи не найдены</div>';
         }
+      },
+      shouldLoad: function(query) {
+        return query.length === 0 || query.length > 2; // Загружаем либо всех, либо при вводе >2 символов
       }
     });
 
@@ -164,21 +214,32 @@
     document.getElementById('publicationForm').addEventListener('submit', function(e) {
       e.preventDefault();
 
-      const formData = {
-        title: document.getElementById('title').value,
-        abstract: document.getElementById('abstract').value,
-        content: document.getElementById('content').value,
-        tags: tagsSelect.getValue(),
-        coauthors: coauthorsSelect.getValue()
-      };
+      // Дополнительная проверка файла перед отправкой
+      const file = fileInput.files[0];
+      if (file && file.type !== 'application/pdf') {
+        fileError.textContent = 'Ошибка: разрешены только PDF-файлы';
+        return;
+      }
+
+      // Создание FormData для отправки файла
+      const formData = new FormData();
+      formData.append('title', document.getElementById('title').value);
+      formData.append('abstract', document.getElementById('abstract').value);
+      formData.append('file', file);
+
+      // Добавление тегов и соавторов
+      tagsSelect.getValue().forEach(tag => {
+        formData.append('tags[]', tag);
+      });
+
+      coauthorsSelect.getValue().forEach(coauthor => {
+        formData.append('coauthors[]', coauthor);
+      });
 
       // Отправка данных на сервер
       fetch('/create-publication', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
+        body: formData,
         credentials: 'include'
       })
               .then(response => response.json())

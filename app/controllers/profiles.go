@@ -441,6 +441,17 @@ func (p Profiles) GetUserData() revel.Result {
 	return p.RenderJSON(profile)
 }
 
+func (p Profiles) GetUsersDataForCreatePublication() revel.Result {
+	_, err := middleware.ValidateJWT(p.Request, "auth_token")
+	if err != nil {
+		p.Response.Status = http.StatusUnauthorized
+		return p.RenderJSON(map[string]string{"error": err.Error()})
+	}
+	profile, _ := models.GetAllProfileIDAndNames()
+	fmt.Println(profile)
+	return p.RenderJSON(profile)
+}
+
 func (p Profiles) DeleteProfileByID(id uint64) revel.Result {
 	err := models.DeleteProfileByID(id)
 	if err != nil {

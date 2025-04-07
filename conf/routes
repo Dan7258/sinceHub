@@ -30,6 +30,7 @@ PATCH   /publications/id/:id                    Publications.UpdatePublicationBy
 
 GET     /profiles/id/:id                            Profiles.GetProfileByID
 GET     /getUserData                                Profiles.GetUserData
+GET     /get-all-user-id-and-names                  Profiles.GetUsersDataForCreatePublication
 GET     /profile                                    Profiles.ShowUserProfile
 GET     /profiles                                   Profiles.GetAllProfiles
 GET     /login                                      Profiles.ShowLoginPage

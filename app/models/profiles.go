@@ -74,6 +74,15 @@ func GetAllProfiles() ([]Profiles, error) {
 	return profiles, nil
 }
 
+func GetAllProfileIDAndNames() ([]Profiles, error) {
+	var profiles []Profiles
+	result := DB.Select("id, first_name, last_name, middle_name").Find(&profiles)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return profiles, nil
+}
+
 func DeleteProfileByID(ID uint64) error {
 	profile := new(Profiles)
 	result := DB.Delete(profile, ID)
