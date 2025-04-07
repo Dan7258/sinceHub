@@ -162,13 +162,39 @@
                         data.Publications.forEach(pub => {
                             const div = document.createElement('div');
                             div.className = 'publication';
+                            const isOwner = data.id === pub.owner_id;
+
                             div.innerHTML = `
-                                <h3>${pub.title || 'Без названия'}</h3>
-                                <p><strong>Аннотация:</strong> ${pub.abstract || 'Нет аннотации'}</p>
-                                <p><strong>Содержание:</strong> ${pub.content || 'Нет содержания'}</p>
-                                <p><strong>Создано:</strong> ${new Date(pub.created_at).toLocaleDateString()}</p>
-                                <p><strong>Обновлено:</strong> ${new Date(pub.updated_at).toLocaleDateString()}</p>
-                            `;
+                            <h3>${pub.title || 'Без названия'}</h3>
+                            <p><strong>Аннотация:</strong> ${pub.abstract || 'Нет аннотации'}</p>
+                            <p><strong>Создано:</strong> ${new Date(pub.created_at).toLocaleDateString()}</p>
+                            <p><strong>Обновлено:</strong> ${new Date(pub.updated_at).toLocaleDateString()}</p>
+
+                            <div style="margin: 10px 0;">
+                                <strong>Соавторы:</strong> ${
+                                                    pub.profiles && pub.profiles.length > 0
+                                                        ? pub.profiles.map(p => `${p.first_name || ''} ${p.last_name || ''}`.trim()).join(', ')
+                                                        : 'Соавторы не указаны'
+                                                }
+                            </div>
+
+                            <div style="margin: 10px 0;">
+                                <strong>Теги:</strong> ${
+                                                    pub.tags && pub.tags.length > 0
+                                                        ? pub.tags.map(tag => `<span style="background:#3498db; color:white; padding:3px 8px; border-radius:12px; margin-right:5px;">${tag.name}</span>`).join(' ')
+                                                        : 'Теги не указаны'
+                                                }
+                            </div>
+
+                            <div style="margin-top: 10px;">
+                                ${pub.file_link ? `<a href="${pub.file_link}" target="_blank" style="margin-right: 15px; color:#2980b9; text-decoration: none;">📄 Скачать статью (PDF)</a>` : ''}
+                                ${
+                                                            isOwner
+                                                                ? `<a href="/edit-publication?id=${pub.id}" style="color: #e67e22; text-decoration: none; margin-right: 15px;">✏️ Редактировать</a>`
+                                                                : `<button onclick="notMyPublication(${pub.id})" style="padding: 5px 10px; border: none; background: #e74c3c; color: #fff; border-radius: 5px; cursor: pointer;">❌ Я не являюсь соавтором</button>`
+                                                        }
+                            </div>
+                        `;
                             publicationsList.appendChild(div);
                         });
                     } else {
@@ -217,6 +243,54 @@
                 window.location.href = '/create-publication';
             });
         });
+
+        function deletePublication(id) {
+            if (!confirm("Вы уверены, что хотите удалить эту публикацию?")) return;
+            fetch(`/delete-publication?id=${id}`, {
+                method: 'DELETE',
+                credentials: 'include'
+            })
+                .then(res => {
+                    if (res.ok) {
+                        alert("Публикация удалена");
+                        location.reload();
+                    } else {
+                        alert("Ошибка при удалении публикации");
+                    }
+                });
+        }
+
+        function notMyPublication(publicationId) {
+            const confirmed = confirm("Вы точно не являетесь соавтором публикации?");
+            if (!confirmed) return;
+
+            const authorId = parseInt(document.getElementById('user_id').innerText);
+
+            fetch('/publications/delete-author', {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify({
+                    id_publication: publicationId,
+                    id_author: authorId
+                })
+            })
+                .then(res => {
+                    if (res.status >= 200 && res.status < 400) {
+                        alert("Вы успешно удалены из списка соавторов.");
+                        location.reload();
+                    } else {
+                        alert("Ошибка при удалении из соавторов.");
+                    }
+                })
+                .catch(error => {
+                    console.error('Ошибка:', error);
+                    alert("Произошла ошибка при выполнении операции.");
+                });
+        }
+
     </script>
 </head>
 <body>

@@ -242,18 +242,16 @@
         body: formData,
         credentials: 'include'
       })
-              .then(response => response.json())
-              .then(data => {
-                if (data.id) {
-                  window.location.href = '/publications/' + data.id;
-                } else {
-                  alert('Ошибка при создании публикации: ' + (data.error || 'Неизвестная ошибка'));
-                }
-              })
-              .catch(error => {
-                console.error('Error:', error);
-                alert('Произошла ошибка при отправке формы');
-              });
+      .then(response => {
+        if (response.redirected) {
+          window.location.href = response.url;
+        } else {
+          return response.text(); // если надо логировать, можно оставить
+        }
+      })
+      .catch(error => {
+        alert('Произошла ошибка при отправке формы: ' + error.message);
+      });
     });
   });
 </script>

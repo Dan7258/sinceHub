@@ -17,7 +17,8 @@ CREATE TABLE publications (
     abstract VARCHAR(1000) NOT NULL,
     file_link VARCHAR(1000) NOT NULL,
     created_at DATE NOT NULL,
-    updated_at DATE NOT NULL
+    updated_at DATE NOT NULL,
+    owner_id INTEGER NOT NULL REFERENCES profiles(id)
 );
 
 CREATE TABLE tags (

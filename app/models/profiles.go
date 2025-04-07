@@ -1,6 +1,9 @@
 package models
 
-import "fmt"
+import (
+	"fmt"
+	"gorm.io/gorm"
+)
 
 type Profiles struct {
 	ID               uint64         `json:"id" gorm:"primaryKey"`
@@ -49,7 +52,14 @@ func ThsProfilesIsExist(login string) bool {
 
 func GetUserProfile(ID uint64) (*Profiles, error) {
 	profile := new(Profiles)
-	result := DB.Preload("Publications").Preload("SubscribersList").Preload("MySubscribesList").First(profile, ID)
+	result := DB.
+		Preload("Publications.Profiles", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id, first_name, last_name, middle_name")
+		}).
+		Preload("Publications.Tags").
+		Preload("SubscribersList").
+		Preload("MySubscribesList").
+		First(profile, ID)
 	if result.Error != nil {
 		return nil, result.Error
 	}

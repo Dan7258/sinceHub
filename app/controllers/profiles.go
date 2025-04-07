@@ -437,7 +437,7 @@ func (p Profiles) GetUserData() revel.Result {
 		return p.Redirect("/login")
 	}
 	profile, _ := models.GetUserProfile(userID)
-	fmt.Println(profile)
+
 	return p.RenderJSON(profile)
 }
 
@@ -448,7 +448,7 @@ func (p Profiles) GetUsersDataForCreatePublication() revel.Result {
 		return p.RenderJSON(map[string]string{"error": err.Error()})
 	}
 	profile, _ := models.GetAllProfileIDAndNames()
-	fmt.Println(profile)
+
 	return p.RenderJSON(profile)
 }
 

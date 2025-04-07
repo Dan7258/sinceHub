@@ -2,6 +2,7 @@ package models
 
 import (
 	"fmt"
+	"gorm.io/gorm"
 	"time"
 )
 
@@ -12,30 +13,24 @@ type Publications struct {
 	FileLink  string     `json:"file_link" gorm:"not null"`
 	CreatedAt time.Time  `json:"created_at"`
 	UpdatedAt time.Time  `json:"updated_at"`
+	OwnerID   uint64     `json:"owner_id" gorm:"not null"`
+	Owner     *Profiles  `json:"owner" gorm:"foreignKey:OwnerID"`
 	Profiles  []Profiles `json:"profiles" gorm:"many2many:profile_publications;"`
 	Tags      []Tags     `json:"tags" gorm:"many2many:publication_tags;"`
 }
 
-func CreatePublication(pub *Publications, tagsMap map[uint64]interface{}, coauthorMap map[uint64]interface{}) error {
+func CreatePublication(pub *Publications, tagIDs []uint64, coauthorIDs []uint64) error {
 	result := DB.Create(pub)
 	if result.Error != nil {
 		return result.Error
 	}
 	var tags []Tags
-	tagIDs := make([]uint64, 0)
-	for tagID := range tagsMap {
-		tagIDs = append(tagIDs, tagID)
-	}
 	result = DB.Find(&tags, tagIDs)
 	DB.Model(pub).Association("Tags").Append(tags)
 	if result.Error != nil {
 		return result.Error
 	}
 	var profiles []Profiles
-	coauthorIDs := make([]uint64, 0)
-	for coauthorID := range coauthorMap {
-		coauthorIDs = append(coauthorIDs, coauthorID)
-	}
 	result = DB.Find(&profiles, coauthorIDs)
 	DB.Model(pub).Association("Profiles").Append(profiles)
 	if result.Error != nil {
@@ -68,7 +63,9 @@ func UpdatePublicationByID(ID int, updPub *Publications) error {
 
 func GetPublicationByID(ID uint64) (*Publications, error) {
 	pub := new(Publications)
-	result := DB.Preload("Tags").Preload("Profiles").First(pub, ID)
+	result := DB.Preload("Tags").Preload("Profiles", func(db *gorm.DB) *gorm.DB {
+		return db.Select("id, first_name, last_name, middle_name")
+	}).First(pub, ID)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -77,7 +74,9 @@ func GetPublicationByID(ID uint64) (*Publications, error) {
 
 func GetAllPublications() ([]Publications, error) {
 	var pub []Publications
-	result := DB.Preload("Tags").Preload("Profiles").Find(&pub)
+	result := DB.Preload("Tags").Preload("Profiles", func(db *gorm.DB) *gorm.DB {
+		return db.Select("id, first_name, last_name, middle_name")
+	}).Find(&pub)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -139,18 +138,18 @@ func AddProfilesToPublication(ID uint64, profileIDs []uint64) error {
 	return nil
 }
 
-func DeleteProfilesFromPublication(ID uint64, profileIDs []uint64) error {
+func DeleteProfileFromPublication(ID uint64, profileID uint64) error {
 	pub := new(Publications)
-	var profiles []Profiles
 	result := DB.First(pub, ID)
 	if result.Error != nil {
 		return result.Error
 	}
-	result = DB.Find(&profiles, profileIDs)
-	if result.Error != nil {
-		return result.Error
+	if pub.OwnerID == profileID {
+		return fmt.Errorf("нельзя удалить владельца публикации")
 	}
-	err := DB.Model(pub).Association("Profiles").Delete(profiles)
+	profile := new(Profiles)
+	result = DB.First(profile, profileID)
+	err := DB.Model(pub).Association("Profiles").Delete(profile)
 	if err != nil {
 		return err
 	}

@@ -16,6 +16,11 @@ type Publications struct {
 	*revel.Controller
 }
 
+type DeleteAuthorFromPublication struct {
+	IDPublication uint64 `json:"id_publication"`
+	IDAuthor      uint64 `json:"id_author"`
+}
+
 func (p Publications) CreatePublication() revel.Result {
 	userID, err := middleware.ValidateJWT(p.Request, "auth_token")
 	if err != nil {
@@ -25,6 +30,7 @@ func (p Publications) CreatePublication() revel.Result {
 	pub := new(models.Publications)
 	pub.Title = p.Params.Get("title")
 	pub.Abstract = p.Params.Get("abstract")
+	pub.OwnerID = userID
 	validate := validator.New()
 	err = validate.Struct(pub)
 	if err != nil {
@@ -61,18 +67,29 @@ func (p Publications) CreatePublication() revel.Result {
 	}
 	pub.FileLink = filePath
 
+	unique := make(map[uint64]interface{}, 0)
 	rawTagIDs := p.Params.Values["tags[]"]
-	tagIDs := make(map[uint64]interface{}, 0)
+	tagIDs := make([]uint64, 0)
 	for _, ID := range rawTagIDs {
 		tagID, _ := strconv.ParseUint(ID, 10, 64)
-		tagIDs[tagID] = nil
+		_, ok := unique[tagID]
+		if !ok {
+			unique[tagID] = nil
+			tagIDs = append(tagIDs, tagID)
+		}
 	}
 	rawCoauthors := p.Params.Values["coauthors[]"]
-	coauthorIDs := make(map[uint64]interface{}, 0)
-	coauthorIDs[userID] = nil
+	unique = make(map[uint64]interface{}, 0)
+	coauthorIDs := make([]uint64, 0)
+	coauthorIDs = append(coauthorIDs, userID)
+	unique[userID] = nil
 	for _, ID := range rawCoauthors {
 		coauthorID, _ := strconv.ParseUint(ID, 10, 64)
-		coauthorIDs[coauthorID] = nil
+		_, ok := unique[coauthorID]
+		if !ok {
+			unique[coauthorID] = nil
+			coauthorIDs = append(coauthorIDs, coauthorID)
+		}
 	}
 	err = models.CreatePublication(pub, tagIDs, coauthorIDs)
 
@@ -81,14 +98,32 @@ func (p Publications) CreatePublication() revel.Result {
 		return p.RenderJSON(map[string]string{"error": err.Error()})
 	}
 
-	p.Response.Status = http.StatusCreated
+	//p.Response.Status = http.StatusCreated
 
 	return p.Redirect("/profile")
 }
 
-//func (p Publications) getPublicationFile(name string) revel.Result {
+//func fillSliceUniqueIDs(data []string, res []uint64) revel.Result {
+//	unique := make(map[uint64]interface{}, 0)
 //
 //}
+
+func (p Publications) DeleteAuthorFromPublication() revel.Result {
+	_, err := middleware.ValidateJWT(p.Request, "auth_token")
+	if err != nil {
+		return p.Redirect("/login")
+	}
+	dafp := new(DeleteAuthorFromPublication)
+	p.Params.BindJSON(&dafp)
+	fmt.Println(dafp)
+
+	err = models.DeleteProfileFromPublication(dafp.IDPublication, dafp.IDAuthor)
+	if err != nil {
+		p.Response.Status = http.StatusInternalServerError
+		return p.RenderJSON(map[string]string{"error": err.Error()})
+	}
+	return p.RenderJSON(map[string]int{"status": http.StatusNoContent})
+}
 
 func (p Publications) ShowCreatePublicationPage() revel.Result {
 	_, err := middleware.ValidateJWT(p.Request, "auth_token")
@@ -198,22 +233,6 @@ func (p Publications) AddProfilesToPublication(id uint64) revel.Result {
 		return p.RenderJSON(map[string]string{"error": err.Error()})
 	}
 	err = models.AddProfilesToPublication(id, profileIDs)
-	if err != nil {
-		p.Response.Status = http.StatusInternalServerError
-		return p.RenderJSON(map[string]string{"error": err.Error()})
-	}
-	p.Response.Status = http.StatusNoContent
-	return p.RenderJSON(map[string]int{"status": http.StatusNoContent})
-}
-
-func (p Publications) DeleteProfilesFromPublication(id uint64) revel.Result {
-	var profileIDs []uint64
-	err := p.Params.BindJSON(&profileIDs)
-	if err != nil {
-		p.Response.Status = http.StatusBadRequest
-		return p.RenderJSON(map[string]string{"error": err.Error()})
-	}
-	err = models.DeleteProfilesFromPublication(id, profileIDs)
 	if err != nil {
 		p.Response.Status = http.StatusInternalServerError
 		return p.RenderJSON(map[string]string{"error": err.Error()})

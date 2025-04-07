@@ -25,7 +25,7 @@ POST    /publications/:id/tags                  Publications.AddTagsToPublicatio
 POST    /publications/:id/profiles              Publications.AddProfilesToPublication
 DELETE  /publications/id/:id                    Publications.DeletePublicationByID
 DELETE  /publications/:id/tags                  Publications.DeleteTagsFromPublication
-DELETE  /publications/:id/profiles              Publications.DeleteProfilesFromPublication
+DELETE  /publications/delete-author             Publications.DeleteAuthorFromPublication
 PATCH   /publications/id/:id                    Publications.UpdatePublicationByID
 
 GET     /profiles/id/:id                            Profiles.GetProfileByID
