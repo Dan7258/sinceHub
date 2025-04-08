@@ -1,11 +1,10 @@
 package controllers
 
 import (
+	"github.com/revel/revel"
 	"sinceHub/app/middleware"
 	"sinceHub/app/models"
 	"sinceHub/app/smtp"
-
-	"github.com/revel/revel"
 )
 
 type App struct {
@@ -20,4 +19,5 @@ func init() {
 	revel.OnAppStart(middleware.Init)
 	revel.OnAppStart(models.InitDB)
 	revel.OnAppStart(smtp.InitSMTP)
+	revel.OnAppStart(InitLicense)
 }

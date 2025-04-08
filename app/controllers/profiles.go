@@ -43,11 +43,7 @@ var changeEmailCodes = make(map[uint64]ChangeEmail)
 
 var changePasswordCodes = make(map[uint64]ChangePassword)
 
-func (p Profiles) ShowRegisterPage() revel.Result {
-	return p.RenderTemplate("register.html")
-}
-
-func (p Profiles) generateRandomNumber() (*big.Int, error) {
+func (p Profiles) GenerateRandomNumber() (*big.Int, error) {
 	max := big.NewInt(100000)
 	randomNumber, err := rand.Int(rand.Reader, max)
 	if err != nil {
@@ -69,7 +65,7 @@ func (p Profiles) SendVerificationCodeForRegister() revel.Result {
 		p.Response.Status = http.StatusConflict
 		return p.RenderJSON(map[string]string{"error": "Пользователь с таким email уже существует"})
 	}
-	randomNumber, err := p.generateRandomNumber()
+	randomNumber, err := p.GenerateRandomNumber()
 	if err != nil {
 		p.Response.Status = http.StatusInternalServerError
 		return p.RenderJSON(map[string]string{"error": "Не удалось сгенерировать код подтверждения"})
@@ -116,7 +112,7 @@ func (p Profiles) SendVerificationCodeForChangeEmail() revel.Result {
 		return p.RenderJSON(map[string]string{"error": "Пользователь с таким email уже существует"})
 	}
 
-	randomNumber, err := p.generateRandomNumber()
+	randomNumber, err := p.GenerateRandomNumber()
 	if err != nil {
 		p.Response.Status = http.StatusInternalServerError
 		return p.RenderJSON(map[string]string{"error": "Не удалось сгенерировать код подтверждения"})
@@ -221,7 +217,7 @@ func (p Profiles) SendVerificationCodeForChangePassword() revel.Result {
 		return p.RenderJSON(map[string]string{"error": err.Error()})
 	}
 
-	randomNumber, err := p.generateRandomNumber()
+	randomNumber, err := p.GenerateRandomNumber()
 	if err != nil {
 		p.Response.Status = http.StatusInternalServerError
 		return p.RenderJSON(map[string]string{"error": "Не удалось сгенерировать код подтверждения"})
@@ -384,19 +380,6 @@ func (p Profiles) Login(login, password string) revel.Result {
 	return p.Redirect("/profile")
 }
 
-func (p Profiles) ShowLoginPage() revel.Result {
-	return p.RenderTemplate("login.html")
-}
-
-func (p Profiles) ShowSettingsPage() revel.Result {
-	_, err := middleware.ValidateJWT(p.Request, "auth_token")
-	if err != nil {
-		//p.Response.Status = http.StatusUnauthorized
-		return p.Redirect("/login")
-	}
-	return p.RenderTemplate("settings.html")
-}
-
 func (p Profiles) Logout() revel.Result {
 	cookie := &http.Cookie{
 		Name:     "auth_token",
@@ -421,15 +404,7 @@ func (p Profiles) GetProfileByID(id uint64) revel.Result {
 	p.Response.Status = http.StatusOK
 	return p.RenderJSON(profile)
 }
-func (p Profiles) ShowUserProfile() revel.Result {
-	_, err := middleware.ValidateJWT(p.Request, "auth_token")
-	if err != nil {
-		//p.Response.Status = http.StatusUnauthorized
-		return p.Redirect("/login")
-	}
 
-	return p.RenderTemplate("profile.html")
-}
 func (p Profiles) GetUserData() revel.Result {
 	userID, err := middleware.ValidateJWT(p.Request, "auth_token")
 	if err != nil {

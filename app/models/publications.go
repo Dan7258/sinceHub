@@ -19,6 +19,21 @@ type Publications struct {
 	Tags      []Tags     `json:"tags" gorm:"many2many:publication_tags;constraint:OnDelete:CASCADE"`
 }
 
+type TypeFile uint64
+
+const (
+	Word TypeFile = iota
+	Exel
+	Libra
+)
+
+type PublicationFiltres struct {
+	CountPublications uint64
+	DateStart         time.Time
+	DateEnd           time.Time
+	Type              TypeFile
+}
+
 func CreatePublication(pub *Publications, tagIDs []uint64, coauthorIDs []uint64) error {
 	result := DB.Create(pub)
 	if result.Error != nil {
@@ -163,4 +178,25 @@ func DeleteProfileFromPublication(ID uint64, profileID uint64) error {
 		return err
 	}
 	return nil
+}
+
+func (pub *Publications) GetPublicationListByFilters(userID uint64, filters PublicationFiltres) ([]Publications, error) {
+	publications := make([]Publications, 0)
+	query := DB.Model(new(Publications)).Preload("Profiles", func(db *gorm.DB) *gorm.DB {
+		return db.Select("id, first_name, last_name, middle_name")
+	})
+	if !filters.DateStart.IsZero() {
+		query = query.Where("created_at >= ?", filters.DateStart)
+	}
+	if !filters.DateEnd.IsZero() {
+		query = query.Where("created_at <= ?", filters.DateEnd)
+	}
+	if filters.CountPublications > 0 {
+		query = query.Limit(int(filters.CountPublications))
+	}
+	result := query.Order("created_at desc").Find(&publications)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return publications, nil
 }

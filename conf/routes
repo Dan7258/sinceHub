@@ -19,13 +19,14 @@ PATCH   /tags/id/:id                            Tags.UpdateTagByID
 GET     /                                       Publications.ShowPublications
 GET     /getPublicationsData                    Publications.GetPublicationsData
 GET     /create-publication                     Publications.ShowCreatePublicationPage
+GET     /update-publication                     Publications.ShowUpdatePublicationPage
+GET     /update-publication/:id                 Publications.GetPublicationData
+POST    /get-file-with-publication-list         Publications.GetFileWithPublicationList
 POST    /create-publication                     Publications.CreatePublication
 POST    /publications/:id/tags                  Publications.AddTagsToPublication
 POST    /publications/:id/profiles              Publications.AddProfilesToPublication
 DELETE  /delete-publication                     Publications.DeletePublication
 DELETE  /publications/delete-author             Publications.DeleteAuthorFromPublication
-GET     /update-publication                     Publications.ShowUpdatePublicationPage
-GET     /update-publication/:id                 Publications.GetPublicationData
 PATCH   /update-publication                     Publications.UpdatePublication
 
 GET     /profiles/id/:id                            Profiles.GetProfileByID

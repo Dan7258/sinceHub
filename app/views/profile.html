@@ -305,7 +305,36 @@
         <button id="subscriptions_btn" class="subscriptions-btn">Мои подписки</button>
         <button id="create_publication_btn" class="create-publication-btn">Создать публикацию</button>
     </div>
+
     <div class="main-content">
+        <div class="filters" style="margin-bottom: 20px; border: 1px solid #ccc; padding: 15px; border-radius: 5px;">
+            <h3>Фильтры для получения списка публикаций</h3>
+            <div style="display: flex; flex-wrap: wrap; gap: 20px; margin-top: 10px;">
+                <div>
+                    <label for="count_publications">Количество публикаций:</label><br>
+                    <input type="number" id="count_publications" min="1" value="10">
+                </div>
+                <div>
+                    <label for="date_start">Дата начала:</label><br>
+                    <input type="date" id="date_start">
+                </div>
+                <div>
+                    <label for="date_end">Дата окончания:</label><br>
+                    <input type="date" id="date_end">
+                </div>
+                <div>
+                    <label for="file_type">Тип файла:</label><br>
+                    <select id="file_type">
+                        <option value="0">Word</option>
+                        <option value="1">Excel</option>
+                        <option value="2">Libra</option>
+                    </select>
+                </div>
+            </div>
+            <button onclick="downloadFilteredPublications()" style="margin-top: 15px; padding: 10px 20px; background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                📥 Получить список публикаций
+            </button>
+        </div>
         <h2>Последние публикации</h2>
         <div class="publication-list" id="publications">
             Загрузка...
@@ -320,6 +349,45 @@
         </div>
     </div>
 </div>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'923dc6de589e12ee',t:'MTc0MjU2MzU0Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'923dc6de589e12ee',t:'MTc0MjU2MzU0Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();
+function downloadFilteredPublications() {
+    const count = parseInt(document.getElementById('count_publications').value);
+    const dateStart = document.getElementById('date_start').value;
+    const dateEnd = document.getElementById('date_end').value;
+    const type = parseInt(document.getElementById('file_type').value);
+
+    const payload = {
+        CountPublications: count,
+        DateStart: dateStart ? new Date(dateStart).toISOString() : null,
+        DateEnd: dateEnd ? new Date(dateEnd).toISOString() : null,
+        Type: type
+    };
+
+    fetch('/get-file-with-publication-list', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify(payload)
+    })
+        .then(response => {
+            if (!response.ok) throw new Error("Ошибка при получении файла.");
+            return response.blob();
+        })
+        .then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'publications_list';
+            a.click();
+            window.URL.revokeObjectURL(url);
+        })
+        .catch(error => {
+            console.error('Ошибка при скачивании:', error);
+            alert("Не удалось получить файл публикаций.");
+        });
+}
+</script>
 </body>
 </html>

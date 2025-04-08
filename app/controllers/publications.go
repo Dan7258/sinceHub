@@ -10,6 +10,8 @@ import (
 	"sinceHub/app/middleware"
 	"sinceHub/app/models"
 	"strconv"
+	"strings"
+	"time"
 )
 
 type Publications struct {
@@ -51,7 +53,7 @@ func (p Publications) CreatePublication() revel.Result {
 	}
 	defer file.Close()
 
-	randomNumber, _ := Profiles{}.generateRandomNumber()
+	randomNumber, _ := Profiles{}.GenerateRandomNumber()
 	filePath := fmt.Sprintf("public/uploads/%d_%s_%s", userID, randomNumber, fileHeader[0].Filename)
 	dst, err := os.Create(filePath)
 	if err != nil {
@@ -123,23 +125,6 @@ func (p Publications) DeleteAuthorFromPublication() revel.Result {
 		return p.RenderJSON(map[string]string{"error": err.Error()})
 	}
 	return p.RenderJSON(map[string]int{"status": http.StatusNoContent})
-}
-
-func (p Publications) ShowCreatePublicationPage() revel.Result {
-	_, err := middleware.ValidateJWT(p.Request, "auth_token")
-	if err != nil {
-		return p.Redirect("/login")
-	}
-	return p.RenderTemplate("create_publication.html")
-}
-
-func (p Publications) ShowUpdatePublicationPage() revel.Result {
-	_, err := middleware.ValidateJWT(p.Request, "auth_token")
-	if err != nil {
-		return p.Redirect("/login")
-	}
-	return p.RenderTemplate("update_publication.html")
-
 }
 
 func (p Publications) GetPublicationData(id uint64) revel.Result {
@@ -229,7 +214,7 @@ func (p Publications) UpdatePublication() revel.Result {
 			return p.RenderJSON(map[string]string{"error": "Не удалось открыть файл"})
 		}
 		defer file.Close()
-		randomNumber, _ := Profiles{}.generateRandomNumber()
+		randomNumber, _ := Profiles{}.GenerateRandomNumber()
 		filePath := fmt.Sprintf("public/uploads/%d_%s_%s", userID, randomNumber, fileHeader[0].Filename)
 		dst, err := os.Create(filePath)
 		if err != nil {
@@ -278,10 +263,6 @@ func (p Publications) UpdatePublication() revel.Result {
 	}
 
 	return p.RenderJSON(map[string]int{"status": http.StatusNoContent})
-}
-
-func (p Publications) ShowPublications() revel.Result {
-	return p.RenderTemplate("publications.html")
 }
 
 func (p Publications) GetPublicationsData() revel.Result {
@@ -340,4 +321,47 @@ func (p Publications) AddProfilesToPublication(id uint64) revel.Result {
 	}
 	p.Response.Status = http.StatusNoContent
 	return p.RenderJSON(map[string]int{"status": http.StatusNoContent})
+}
+
+func (p Publications) GetFileWithPublicationList() revel.Result {
+	userID, err := middleware.ValidateJWT(p.Request, "auth_token")
+	if err != nil {
+		//p.Response.Status = http.StatusUnauthorized
+		return p.Redirect("/login")
+	}
+	filters := new(models.PublicationFiltres)
+	err = p.Params.BindJSON(filters)
+	if err != nil {
+		return p.RenderJSON(map[string]string{"error": err.Error()})
+	}
+	filename, err := GetFileWithPublicationList(userID, *filters)
+	if err != nil {
+		return p.RenderJSON(map[string]string{"error": err.Error()})
+	}
+	file, err := os.Open(filename)
+	if err != nil {
+		return p.RenderJSON(map[string]string{"error": "Ошибка при открытии файла"})
+	}
+	defer file.Close()
+
+	writer := p.Response.GetWriter()
+	httpWriter := writer.(http.ResponseWriter)
+
+	array := strings.Split(filename, "/")
+	name := array[len(array)-1]
+	fmt.Println(name)
+	httpWriter.Header().Set("Content-Disposition", `attachment; filename="`+name+`"`)
+	httpWriter.Header().Set("Content-Type", "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+
+	_, err = io.Copy(httpWriter, file)
+	if err != nil {
+		return p.RenderJSON(map[string]string{"error": "Ошибка при отправке файла"})
+	}
+
+	go func() {
+		time.Sleep(2 * time.Second)
+		_ = os.Remove(filename)
+	}()
+
+	return nil
 }
