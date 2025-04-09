@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/go-playground/validator/v10"
 	"github.com/revel/revel"
+	"golang.org/x/crypto/bcrypt"
 	"math/big"
 	"net/http"
 	"sinceHub/app/middleware"
@@ -274,7 +275,13 @@ func (p Profiles) VerifyAndChangePassword() revel.Result {
 		return p.RenderJSON(map[string]string{"error": "Неверный код подтверждения"})
 	}
 	delete(changePasswordCodes, userID)
-
+	hashPassword, err := middleware.HashPassword(vprofile.Profile.Password)
+	if err != nil {
+		p.Response.Status = http.StatusInternalServerError
+		revel.AppLog.Error(err.Error())
+		return p.RenderJSON(map[string]string{"error": err.Error()})
+	}
+	vprofile.Profile.Password = hashPassword
 	err = models.UpdateProfileByID(userID, &vprofile.Profile)
 	if err != nil {
 		p.Response.Status = http.StatusInternalServerError
@@ -338,7 +345,13 @@ func (p Profiles) VerifyAndCreateUser() revel.Result {
 		return p.RenderJSON(map[string]string{"error": "Неверный код подтверждения"})
 	}
 	delete(verificationEmailCodes, vprofile.Profile.Login)
-
+	hashPassword, err := middleware.HashPassword(vprofile.Profile.Password)
+	if err != nil {
+		p.Response.Status = http.StatusInternalServerError
+		revel.AppLog.Error(err.Error())
+		return p.RenderJSON(map[string]string{"error": err.Error()})
+	}
+	vprofile.Profile.Password = hashPassword
 	err = models.CreateProfile(&vprofile.Profile)
 
 	if err != nil {
@@ -356,7 +369,8 @@ func (p Profiles) Login(login, password string) revel.Result {
 		p.Response.Status = http.StatusUnauthorized
 		return p.RenderTemplate("login.html")
 	}
-	if user.Password != password {
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
+	if err != nil {
 		p.Response.Status = http.StatusUnauthorized
 		return p.RenderTemplate("login.html")
 	}

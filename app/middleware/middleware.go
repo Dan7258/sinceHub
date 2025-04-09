@@ -5,6 +5,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/joho/godotenv"
 	"github.com/revel/revel"
+	"golang.org/x/crypto/bcrypt"
 	"os"
 	"time"
 )
@@ -67,4 +68,9 @@ func ValidateJWT(request *revel.Request, cookieName string) (uint64, error) {
 	}
 
 	return userID, nil
+}
+
+func HashPassword(password string) (string, error) {
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	return string(bytes), err
 }
