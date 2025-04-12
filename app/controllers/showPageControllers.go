@@ -29,7 +29,17 @@ func (p Profiles) ShowUserProfile() revel.Result {
 		return p.Redirect("/login")
 	}
 
-	return p.RenderTemplate("profile.html")
+	return p.RenderTemplate("my_profile.html")
+}
+
+func (p Profiles) ShowUserProfilePageByID(id uint64) revel.Result {
+	_, err := middleware.ValidateJWT(p.Request, "auth_token")
+	if err != nil {
+		//p.Response.Status = http.StatusUnauthorized
+		return p.Redirect("/login")
+	}
+	p.ViewArgs["id"] = id
+	return p.RenderTemplate("profile_by_id.html")
 }
 
 func (p Publications) ShowCreatePublicationPage() revel.Result {

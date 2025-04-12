@@ -29,6 +29,7 @@ DELETE  /delete-publication                     Publications.DeletePublication
 DELETE  /publications/delete-author             Publications.DeleteAuthorFromPublication
 PATCH   /update-publication                     Publications.UpdatePublication
 
+GET     /user-profile/:id                           Profiles.ShowUserProfilePageByID
 GET     /profiles/id/:id                            Profiles.GetProfileByID
 GET     /getUserData                                Profiles.GetUserData
 GET     /get-all-user-id-and-names                  Profiles.GetUsersDataForCreatePublication

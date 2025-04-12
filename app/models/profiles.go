@@ -34,7 +34,14 @@ func CreateProfile(profile *Profiles) error {
 
 func GetProfileByID(ID uint64) (*Profiles, error) {
 	profile := new(Profiles)
-	result := DB.Select("id, first_name, last_name, middle_name, country, vac, appointment").Preload("Publications").Preload("SubscribersList").Preload("MySubscribesList").First(profile, ID)
+	result := DB.Select("id, first_name, last_name, middle_name, country, vac, appointment").
+		Preload("Publications.Profiles", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id, first_name, last_name, middle_name")
+		}).
+		Preload("Publications.Tags").
+		Preload("SubscribersList").
+		Preload("MySubscribesList").
+		First(profile, ID)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -52,7 +59,9 @@ func ThsProfilesIsExist(login string) bool {
 
 func GetUserProfile(ID uint64) (*Profiles, error) {
 	profile := new(Profiles)
-	result := DB.
+	result := DB.Preload("Publications", func(db *gorm.DB) *gorm.DB {
+		return db.Order("created_at desc")
+	}).
 		Preload("Publications.Profiles", func(db *gorm.DB) *gorm.DB {
 			return db.Select("id, first_name, last_name, middle_name")
 		}).
