@@ -3,78 +3,220 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
+    <title>Вход</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: #f8f9fa;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
             margin: 0;
+            color: #2c3e50;
         }
         .login-container {
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            width: 300px;
-        }
-        .login-container h2 {
-            margin-bottom: 20px;
+            background-color: rgba(88, 130, 193, 0.15);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            width: 380px;
+            max-width: 90%;
             text-align: center;
+            backdrop-filter: blur(2px);
+            border: 1px solid rgba(88, 130, 193, 0.2);
         }
-        .login-container input {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
+        .login-header {
+            margin-bottom: 30px;
         }
-        .login-container button {
+        .login-header h1 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            text-align: center;
+            color: #2c3e50;
+        }
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left; /* Изменено на left для выравнивания лейблов */
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            font-size: 15px;
+            color: #2c3e50;
+            text-align: left; /* Изменено на left для выравнивания лейблов */
+        }
+        .form-group input {
             width: 100%;
-            padding: 10px;
-            background-color: #28a745;
+            max-width: 350px; /* Увеличена ширина поля ввода */
+            padding: 16px 15px;
+            border: 1px solid rgba(88, 130, 193, 0.3);
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s;
+            background-color: rgba(255, 255, 255, 0.8);
+            margin: 0 auto; /* Центрируем поле ввода */
+            display: block;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: #5882C1;
+            box-shadow: 0 0 0 2px rgba(88, 130, 193, 0.2);
+        }
+        .login-btn {
+            width: 100%;
+            max-width: 350px; /* Такая же ширина, как у полей */
+            padding: 13px;
+            background-color: #4D38D7;
             color: #fff;
             border: none;
-            border-radius: 4px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
             cursor: pointer;
+            transition: background-color 0.3s;
+            margin: 10px auto 0; /* Центрируем кнопку */
+            display: block;
         }
-        .login-container button:hover {
-            background-color: #218838;
-        }
-        .error {
-            color: red;
-            text-align: center;
-            margin-bottom: 10px;
+        .login-btn:hover {
+            background-color: #3A2AA3;
         }
         .register-link {
             text-align: center;
-            margin-top: 10px;
+            margin-top: 25px;
+            font-size: 15px;
+            color: #2c3e50;
         }
         .register-link a {
-            color: #007bff;
+            color: #4D38D7;
             text-decoration: none;
+            font-weight: 500;
         }
         .register-link a:hover {
             text-decoration: underline;
         }
+        .error {
+            color: #e74c3c;
+            font-size: 14px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
     </style>
 </head>
+
 <body>
 {{template "header.html" .}}
 <div class="login-container">
-    <h2>Login</h2>
-    <form action="/login" method="POST">
-        <input type="text" name="login" placeholder="Login" required>
-        <input type="password" name="password" placeholder="Password" required>
-        <button type="submit">Login</button>
+    <div class="login-header">
+        <h1>Вход</h1>
+    </div>
+
+    <form id="loginForm">
+        <div class="form-group">
+            <label for="login">Логин (Email)</label>
+            <input type="text" id="login" name="login" placeholder="ваш email" required>
+        </div>
+
+        <div class="form-group">
+            <label for="password">Пароль</label>
+            <input type="password" id="password" name="password" placeholder="ваш пароль" required>
+        </div>
+
+        <button type="submit" class="login-btn">Войти</button>
     </form>
+
     <div class="register-link">
         Нет аккаунта? <a href="/register">Зарегистрироваться</a>
     </div>
+
+    <div id="error-message" class="error-message" style="color: red; margin-top: 15px; display: none;"></div>
 </div>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'923dc6de4a25bfb0',t:'MTc0MjU2MzU0Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
+
+<script>
+    // Функции для работы меню
+    function toggleMenu() {
+        const menu = document.getElementById("menu");
+        const burger = document.querySelector(".burger-menu");
+        const body = document.body;
+
+        menu.classList.toggle("active");
+        burger.classList.toggle("active");
+
+        const isOpen = menu.classList.contains("active");
+
+        if (isOpen) {
+            const scrollBarWidth = window.innerWidth - document.documentElement.clientWidth;
+            body.style.overflow = "hidden";
+            body.style.paddingRight = scrollBarWidth + "px";
+        } else {
+            body.style.overflow = "";
+            body.style.paddingRight = "";
+        }
+    }
+
+    document.addEventListener('click', function(event) {
+        const menu = document.getElementById("menu");
+        const burger = document.querySelector(".burger-menu");
+        const body = document.body;
+
+        if (!menu.contains(event.target) && !event.target.closest('.burger-menu') && menu.classList.contains('active')) {
+            menu.classList.remove("active");
+            burger.classList.remove("active");
+            body.style.overflow = "";
+            body.style.paddingRight = "";
+        }
+    });
+
+    // Обработчик формы входа
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const login = document.getElementById('login').value;
+        const password = document.getElementById('password').value;
+        const errorElement = document.getElementById('error-message');
+
+        // Сброс предыдущих ошибок
+        errorElement.style.display = 'none';
+        errorElement.textContent = '';
+
+        if (!login || !password) {
+            showError('Пожалуйста, заполните все поля');
+            return;
+        }
+
+        try {
+            const response = await fetch('/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `login=${encodeURIComponent(login)}&password=${encodeURIComponent(password)}`
+            });
+
+            if (response.redirected) {
+                // Перенаправление при успешном входе
+                window.location.href = response.url;
+            } else if (response.status === 401) {
+                showError('Неверный логин или пароль');
+            } else if (response.status === 500) {
+                showError('Ошибка сервера. Пожалуйста, попробуйте позже');
+            } else {
+                const result = await response.text();
+                showError(result || 'Произошла неизвестная ошибка');
+            }
+        } catch (error) {
+            console.error('Ошибка:', error);
+            showError('Произошла ошибка при подключении к серверу');
+        }
+    });
+
+    function showError(message) {
+        const errorElement = document.getElementById('error-message');
+        errorElement.textContent = message;
+        errorElement.style.display = 'block';
+    }
+</script>
 </body>
 </html>

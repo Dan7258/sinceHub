@@ -5,173 +5,286 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Главная страница</title>
     <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2c3e50;
+            --text-color: #333;
+            --light-bg: #f4f7fa;
+            --card-bg: #fff;
+            --error-color: #e74c3c;
+            --muted-text: #7f8c8d;
+        }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4f7fa;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--light-bg);
             margin: 0;
             padding: 0;
-            color: #333;
+            color: var(--text-color);
+            line-height: 1.6;
         }
+
         .container {
-            max-width: 900px;
+            max-width: min(900px, 95%);
             margin: 20px auto;
-            padding: 30px;
-            background: #fff;
+            padding: 2rem;
+            background: var(--card-bg);
             border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
+
         h1 {
-            color: #2c3e50;
-            border-bottom: 2px solid #3498db;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
+            color: var(--secondary-color);
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+            font-size: clamp(1.5rem, 5vw, 2rem);
         }
+
         .publication {
-            background: #ecf0f1;
-            padding: 15px;
-            margin-bottom: 20px;
-            border-radius: 5px;
-            transition: background 0.3s;
+            background: #fff;
+            padding: 1.25rem;
+            margin-bottom: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e0e0e0;
         }
-        .publication:hover {
-            background: #dfe6e9;
-        }
+
         .publication h2 {
-            color: #34495e;
-            margin: 0 0 10px 0;
-            font-size: 1.5em;
+            color: var(--secondary-color);
+            margin: 0 0 0.5rem 0;
+            font-size: 1.25rem;
         }
+
         .publication p {
-            margin: 5px 0;
+            margin: 0.5rem 0;
         }
+
         .publication .abstract {
             font-style: italic;
-            color: #7f8c8d;
+            color: var(--muted-text);
         }
-        .publication .profiles, .publication .tags {
-            margin-top: 10px;
+
+        .publication .profiles,
+        .publication .tags {
+            margin-top: 0.75rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            align-items: center;
         }
-        .publication .profiles span, .publication .tags span {
-            background: #3498db;
+
+        .publication .profiles a,
+        .publication .tags span {
+            background: var(--primary-color);
             color: #fff;
-            padding: 5px 10px;
-            border-radius: 15px;
-            margin-right: 5px;
-            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.875rem;
+            text-decoration: none;
+            transition: background 0.2s;
         }
+
+        .publication .profiles a:hover {
+            background: #2980b9;
+        }
+
         .loading {
-            color: #7f8c8d;
+            color: var(--muted-text);
             font-style: italic;
+            text-align: center;
+            padding: 2rem;
         }
-        @media (max-width: 600px) {
-            .container {
-                padding: 15px;
-            }
-            .publication h2 {
-                font-size: 1.2em;
-            }
+
+        .download-link {
+            display: inline-block;
+            margin-top: 0.75rem;
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .error-message {
+            color: var(--error-color);
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .skeleton {
+            animation: pulse 1.5s infinite ease-in-out;
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            height: 1.5rem;
+        }
+
+        @keyframes pulse {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
         }
     </style>
-    <script>
-        // Оставляем скрипт без изменений
-        document.addEventListener("DOMContentLoaded", function() {
-            fetch('/getPublicationsData', { credentials: 'include' })
-                .then(response => {
-                    if (response.status === 401) {
-                        window.location.href = '/login';
-                        document.querySelector('header').style.display = 'none';
-                        return Promise.reject('Unauthorized');
-                    }
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    document.querySelector('header').style.display = 'block';
-                    const publicationsContainer = document.getElementById('publications');
-                    publicationsContainer.innerHTML = '';
-                    if (data && data.length > 0) {
-                        data.forEach(pub => {
-                            const div = document.createElement('div');
-                            div.className = 'publication';
-
-                            const title = document.createElement('h2');
-                            title.innerText = pub.title || 'Без названия';
-                            div.appendChild(title);
-
-                            const abstract = document.createElement('p');
-                            abstract.className = 'abstract';
-                            abstract.innerText = pub.abstract || 'Абстракт не указан';
-                            div.appendChild(abstract);
-
-                            const created = document.createElement('p');
-                            created.innerText = 'Создано: ' + (pub.created_at ? new Date(pub.created_at).toLocaleString() : 'Не указано');
-                            div.appendChild(created);
-
-                            const updated = document.createElement('p');
-                            updated.innerText = 'Обновлено: ' + (pub.updated_at ? new Date(pub.updated_at).toLocaleString() : 'Не указано');
-                            div.appendChild(updated);
-
-                            const profiles = document.createElement('div');
-                            profiles.className = 'profiles';
-                            profiles.innerText = 'Авторы: ';
-                            if (pub.profiles && pub.profiles.length > 0) {
-                                pub.profiles.forEach(profile => {
-                                    const span = document.createElement('span');
-                                    span.innerText = `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'Неизвестный автор';
-                                    profiles.appendChild(span);
-                                });
-                            } else {
-                                profiles.innerText += 'Авторы не указаны';
-                            }
-                            div.appendChild(profiles);
-
-                            const tags = document.createElement('div');
-                            tags.className = 'tags';
-                            tags.innerText = 'Теги: ';
-                            if (pub.tags && pub.tags.length > 0) {
-                                pub.tags.forEach(tag => {
-                                    const span = document.createElement('span');
-                                    span.innerText = tag.name || 'Без названия';
-                                    tags.appendChild(span);
-                                });
-                            } else {
-                                tags.innerText += 'Теги не указаны';
-                            }
-                            div.appendChild(tags);
-
-                            if (pub.file_link) {
-                                const downloadLink = document.createElement('a');
-                                downloadLink.href = pub.file_link;
-                                downloadLink.innerText = '📄 Скачать статью (PDF)';
-                                downloadLink.target = '_blank';
-                                downloadLink.style.display = 'inline-block';
-                                downloadLink.style.marginTop = '10px';
-                                downloadLink.style.color = '#2980b9';
-                                div.appendChild(downloadLink);
-                            }
-
-                            publicationsContainer.appendChild(div);
-                        });
-                    } else {
-                        publicationsContainer.innerHTML = '<p>Публикаций нет</p>';
-                    }
-                })
-                .catch(error => {
-                    console.error('Ошибка при получении публикаций:', error);
-                    document.querySelector('.container').innerHTML =
-                        '<p style="color: #e74c3c;">Ошибка при загрузке публикаций</p>';
-                });
-        });
-    </script>
 </head>
 <body>
 {{template "header.html"}}
 <div class="container">
     <h1>Публикации</h1>
-    <div id="publications" class="loading">Загрузка...</div>
+    <div id="publications">
+        <!-- Skeleton loader -->
+        <div class="skeleton" style="width: 80%;"></div>
+        <div class="skeleton" style="width: 60%;"></div>
+        <div class="skeleton" style="width: 70%; height: 100px;"></div>
+        <div class="skeleton" style="width: 50%;"></div>
+    </div>
 </div>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'923dc6de4917afb9',t:'MTc0MjU2MzU0Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Добавляем задержку для демонстрации скелетона (можно убрать в продакшене)
+        setTimeout(loadPublications, 300);
+    });
+
+    function loadPublications() {
+        const publicationsContainer = document.getElementById('publications');
+
+        fetch('/getPublicationsData', {
+            credentials: 'include',
+            headers: {
+                'Accept': 'application/json',
+                'Cache-Control': 'no-cache'
+            }
+        })
+            .then(async response => {
+                if (response.status === 401) {
+                    // Проверяем, чтобы не зациклиться на /login
+                    if (!window.location.pathname.includes('/login')) {
+                        window.location.href = '/login';
+                    }
+                    return;
+                }
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                renderPublications(data);
+            })
+            .catch(error => {
+                console.error('Ошибка при получении публикаций:', error);
+                showError();
+            });
+    }
+
+    function renderPublications(data) {
+        const publicationsContainer = document.getElementById('publications');
+
+        if (!data || data.length === 0) {
+            publicationsContainer.innerHTML = '<p class="loading">Публикаций нет</p>';
+            return;
+        }
+
+        const fragment = document.createDocumentFragment();
+
+        data.forEach(pub => {
+            const div = document.createElement('div');
+            div.className = 'publication';
+
+            div.innerHTML = `
+                <h2>${escapeHtml(pub.title || 'Без названия')}</h2>
+                <p class="abstract">${escapeHtml(pub.abstract || 'Абстракт не указан')}</p>
+                <p>Создано: ${formatDate(pub.created_at) || 'Не указано'}</p>
+                <p>Обновлено: ${formatDate(pub.updated_at) || 'Не указано'}</p>
+
+                <div class="profiles">
+                    Авторы: ${renderProfiles(pub.profiles)}
+                </div>
+
+                <div class="tags">
+                    Теги: ${renderTags(pub.tags)}
+                </div>
+
+                ${pub.file_link ?
+                `<a href="${escapeHtml(pub.file_link)}" class="download-link" target="_blank" rel="noopener">
+                        📄 Скачать статью (PDF)
+                    </a>` : ''
+            }
+            `;
+
+            fragment.appendChild(div);
+        });
+
+        publicationsContainer.innerHTML = '';
+        publicationsContainer.appendChild(fragment);
+    }
+
+    function renderProfiles(profiles) {
+        if (!profiles || profiles.length === 0) {
+            return 'Авторы не указаны';
+        }
+
+        return profiles.map(profile => {
+            const name = `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'Неизвестный автор';
+            return `<a href="/user-profile/${escapeHtml(profile.id)}">${escapeHtml(name)}</a>`;
+        }).join('');
+    }
+
+    function renderTags(tags) {
+        if (!tags || tags.length === 0) {
+            return 'Теги не указаны';
+        }
+
+        return tags.map(tag => {
+            return `<span>${escapeHtml(tag.name || 'Без названия')}</span>`;
+        }).join('');
+    }
+
+    function formatDate(dateString) {
+        if (!dateString) return null;
+
+        try {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('ru-RU', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        } catch {
+            return null;
+        }
+    }
+
+    function escapeHtml(unsafe) {
+        if (!unsafe) return '';
+        return unsafe.toString()
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
+    function showError() {
+        const publicationsContainer = document.getElementById('publications');
+        publicationsContainer.innerHTML = `
+            <div class="error-message">
+                Ошибка при загрузке публикаций. Пожалуйста, попробуйте позже.
+                <button onclick="loadPublications()" style="
+                    margin-top: 1rem;
+                    padding: 0.5rem 1rem;
+                    background: var(--primary-color);
+                    color: white;
+                    border: none;
+                    border-radius: 4px;
+                    cursor: pointer;
+                ">
+                    Повторить попытку
+                </button>
+            </div>
+        `;
+    }
+</script>
 </body>
 </html>

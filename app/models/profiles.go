@@ -21,6 +21,12 @@ type Profiles struct {
 	MySubscribesList []Profiles     `gorm:"many2many:subscribs;joinForeignKey:subscribers_id;joinReferences:profiles_id"`
 }
 
+type ProfileWithSubscribitionStatus struct {
+	Profile      Profiles
+	Isubscribed  bool
+	IsSubscribed bool
+}
+
 func CreateProfile(profile *Profiles) error {
 	result := DB.Create(profile)
 	if result.Error != nil {
@@ -39,8 +45,12 @@ func GetProfileByID(ID uint64) (*Profiles, error) {
 			return db.Select("id, first_name, last_name, middle_name")
 		}).
 		Preload("Publications.Tags").
-		Preload("SubscribersList").
-		Preload("MySubscribesList").
+		Preload("SubscribersList", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id, first_name, last_name, middle_name")
+		}).
+		Preload("MySubscribesList", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id, first_name, last_name, middle_name")
+		}).
 		First(profile, ID)
 	if result.Error != nil {
 		return nil, result.Error
@@ -66,8 +76,12 @@ func GetUserProfile(ID uint64) (*Profiles, error) {
 			return db.Select("id, first_name, last_name, middle_name")
 		}).
 		Preload("Publications.Tags").
-		Preload("SubscribersList").
-		Preload("MySubscribesList").
+		Preload("SubscribersList", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id, first_name, last_name, middle_name")
+		}).
+		Preload("MySubscribesList", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id, first_name, last_name, middle_name")
+		}).
 		First(profile, ID)
 	if result.Error != nil {
 		return nil, result.Error
@@ -178,42 +192,6 @@ func DeletePublicationsFromProfile(ID uint64, pubIDs []uint64) error {
 		return result.Error
 	}
 	err := DB.Model(profile).Association("Publications").Delete(pubs)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func AddSubscribersToProfile(ID uint64, subIDs []uint64) error {
-	profile := new(Profiles)
-	var subs []Profiles
-	result := DB.First(profile, ID)
-	if result.Error != nil {
-		return result.Error
-	}
-	result = DB.Find(&subs, subIDs)
-	if result.Error != nil {
-		return result.Error
-	}
-	err := DB.Model(profile).Association("SubscribersList").Append(subs)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func DeleteSubscribersFromProfile(ID uint64, subIDs []uint64) error {
-	profile := new(Profiles)
-	var subs []Profiles
-	result := DB.First(profile, ID)
-	if result.Error != nil {
-		return result.Error
-	}
-	result = DB.Find(&subs, subIDs)
-	if result.Error != nil {
-		return result.Error
-	}
-	err := DB.Model(profile).Association("SubscribersList").Delete(subs)
 	if err != nil {
 		return err
 	}

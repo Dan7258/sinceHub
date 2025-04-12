@@ -33,10 +33,13 @@ func (p Profiles) ShowUserProfile() revel.Result {
 }
 
 func (p Profiles) ShowUserProfilePageByID(id uint64) revel.Result {
-	_, err := middleware.ValidateJWT(p.Request, "auth_token")
+	userID, err := middleware.ValidateJWT(p.Request, "auth_token")
 	if err != nil {
 		//p.Response.Status = http.StatusUnauthorized
 		return p.Redirect("/login")
+	}
+	if userID == id {
+		return p.RenderTemplate("my_profile.html")
 	}
 	p.ViewArgs["id"] = id
 	return p.RenderTemplate("profile_by_id.html")

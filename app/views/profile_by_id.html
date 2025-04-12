@@ -53,13 +53,17 @@
         .publication h3 {
             margin: 0 0 10px;
         }
-        .profiles span, .tags span {
+        .profiles a, .tags span {
             background: #3498db;
             color: #fff;
             padding: 5px 10px;
             border-radius: 15px;
             margin-right: 5px;
             display: inline-block;
+            text-decoration: none;
+        }
+        .profiles a:hover {
+            background: #2980b9;
         }
         .subscription-item {
             display: inline-block;
@@ -135,20 +139,20 @@
                 return res.json();
             })
             .then(data => {
-                document.getElementById("first_name").innerText = data.first_name || 'Не указано';
-                document.getElementById("last_name").innerText = data.last_name || 'Не указано';
-                document.getElementById("middle_name").innerText = data.middle_name || 'Не указано';
-                document.getElementById("academic_degree").innerText = data.academic_degree || 'Не указана';
-                document.getElementById("appointment").innerText = data.appointment || 'Не указано';
-                document.getElementById("country").innerText = data.country || 'Не указана';
-                document.getElementById("subscribers_count").innerText = data.SubscribersList?.length || 0;
-                document.getElementById("subscriptions_count").innerText = data.MySubscribesList?.length || 0;
+                document.getElementById("first_name").innerText = data.Profile.first_name || 'Не указано';
+                document.getElementById("last_name").innerText = data.Profile.last_name || 'Не указано';
+                document.getElementById("middle_name").innerText = data.Profile.middle_name || 'Не указано';
+                document.getElementById("academic_degree").innerText = data.Profile.academic_degree || 'Не указана';
+                document.getElementById("appointment").innerText = data.Profile.appointment || 'Не указано';
+                document.getElementById("country").innerText = data.Profile.country || 'Не указана';
+                document.getElementById("subscribers_count").innerText = data.Profile.SubscribersList?.length || 0;
+                document.getElementById("subscriptions_count").innerText = data.Profile.MySubscribesList?.length || 0;
 
                 const publicationsDiv = document.getElementById("publications");
                 publicationsDiv.innerHTML = '';
 
-                if (data.Publications && data.Publications.length > 0) {
-                    data.Publications.forEach(pub => {
+                if (data.Profile.Publications && data.Profile.Publications.length > 0) {
+                    data.Profile.Publications.forEach(pub => {
                         const pubDiv = document.createElement("div");
                         pubDiv.className = "publication";
                         pubDiv.innerHTML = `
@@ -162,10 +166,15 @@
                         const profilesDiv = document.createElement('div');
                         profilesDiv.className = 'profiles';
                         profilesDiv.innerHTML = 'Авторы: ';
-                        if (pub.profiles && pub.profiles.length > 0) { // Изменено с Profiles на profiles
+                        if (pub.profiles && pub.profiles.length > 0) {
                             pub.profiles.forEach(profile => {
                                 const span = document.createElement('span');
-                                span.innerText = `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'Неизвестный автор';
+                                const link = document.createElement('a');
+                                link.href = `/user-profile/${profile.id}`; // Ссылка на страницу профиля автора
+                                link.innerText = `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'Неизвестный автор';
+                                link.style.color = 'white'; // Сделать ссылку белым цветом для видимости
+                                link.style.textDecoration = 'none'; // Убираем подчеркивание
+                                span.appendChild(link);
                                 profilesDiv.appendChild(span);
                             });
                         } else {
@@ -194,33 +203,60 @@
                     publicationsDiv.innerText = 'Публикаций нет';
                 }
 
-                // Проверка подписки
-                fetch('/check-subscription/' + profileId, { credentials: 'include' })
-                    .then(res => res.json())
-                    .then(res => {
-                        if (res.subscribed) {
-                            document.getElementById('subscribe_btn').style.display = 'none';
-                            document.getElementById('unsubscribe_btn').style.display = 'inline-block';
-                        }
-                    });
+                // Логика подписки/отписки
+                if (data.Isubscribed) {
+                    document.getElementById('subscribe_btn').style.display = 'none';  // Скрыть кнопку "Подписаться"
+                    document.getElementById('unsubscribe_btn').style.display = 'inline-block';  // Показать кнопку "Отписаться"
+                } else {
+                    document.getElementById('subscribe_btn').style.display = 'inline-block';  // Показать кнопку "Подписаться"
+                    document.getElementById('unsubscribe_btn').style.display = 'none';  // Скрыть кнопку "Отписаться"
+                }
             })
             .catch(error => {
                 console.error("Ошибка загрузки профиля:", error);
                 document.getElementById("publications").innerHTML = '<p class="error">Ошибка загрузки данных профиля</p>';
             });
 
+        // Обработчик кнопки "Подписаться"
         document.getElementById('subscribe_btn').addEventListener('click', function () {
             fetch(`/subscribe/${profileId}`, { method: 'POST', credentials: 'include' })
-                .then(() => location.reload())
+                .then(res => {
+                    if (res.ok) {
+                        // Переключаем кнопки
+                        document.getElementById('subscribe_btn').style.display = 'none';
+                        document.getElementById('unsubscribe_btn').style.display = 'inline-block';
+
+                        // Обновление количества подписчиков
+                        const count = document.getElementById('subscribers_count');
+                        count.innerText = parseInt(count.innerText) + 1;
+                    } else {
+                        alert('Ошибка при подписке');
+                    }
+                })
                 .catch(err => alert("Ошибка при подписке"));
         });
 
+        // Обработчик кнопки "Отписаться"
         document.getElementById('unsubscribe_btn').addEventListener('click', function () {
-            fetch(`/unsubscribe/${profileId}`, { method: 'POST', credentials: 'include' })
-                .then(() => location.reload())
+            fetch(`/unsubscribe/${profileId}`, { method: 'DELETE', credentials: 'include' })
+                .then(res => {
+                    if (res.ok) {
+                        // Переключаем кнопки
+                        document.getElementById('subscribe_btn').style.display = 'inline-block';
+                        document.getElementById('unsubscribe_btn').style.display = 'none';
+
+                        // Обновление количества подписчиков
+                        const count = document.getElementById('subscribers_count');
+                        count.innerText = parseInt(count.innerText) - 1;
+                    } else {
+                        alert('Ошибка при отписке');
+                    }
+                })
                 .catch(err => alert("Ошибка при отписке"));
         });
     });
 </script>
+
+
 </body>
 </html>

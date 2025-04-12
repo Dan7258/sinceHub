@@ -410,13 +410,22 @@ func (p Profiles) Logout() revel.Result {
 }
 
 func (p Profiles) GetProfileByID(id uint64) revel.Result {
+	userID, err := middleware.ValidateJWT(p.Request, "auth_token")
+	if err != nil {
+		p.Response.Status = http.StatusUnauthorized
+		return p.Redirect("/login")
+	}
 	profile, err := models.GetProfileByID(id)
 	if err != nil {
 		p.Response.Status = http.StatusNotFound
 		return p.RenderJSON(map[string]string{"error": err.Error()})
 	}
+	profileWithSubscribitionStatus := new(models.ProfileWithSubscribitionStatus)
+	profileWithSubscribitionStatus.Profile = *profile
+	profileWithSubscribitionStatus.Isubscribed = models.CheckMySubscribesForProfile(userID, id)
+	profileWithSubscribitionStatus.IsSubscribed = models.CheckMySubscribesForProfile(id, userID)
 	p.Response.Status = http.StatusOK
-	return p.RenderJSON(profile)
+	return p.RenderJSON(profileWithSubscribitionStatus)
 }
 
 func (p Profiles) GetUserData() revel.Result {
@@ -558,34 +567,32 @@ func (p Profiles) DeletePublicationsFromProfile(id uint64) revel.Result {
 	return p.RenderJSON(map[string]int{"status": http.StatusNoContent})
 }
 
-func (p Profiles) AddSubscribersToProfile(id uint64) revel.Result {
-	var subIDs []uint64
-	err := p.Params.BindJSON(&subIDs)
+func (p Profiles) AddSubscriberToProfile(id uint64) revel.Result {
+	userID, err := middleware.ValidateJWT(p.Request, "auth_token")
 	if err != nil {
-		p.Response.Status = http.StatusBadRequest
-		return p.RenderJSON(map[string]string{"error": err.Error()})
+		//p.Response.Status = http.StatusUnauthorized
+		return p.Redirect("/login")
 	}
-	err = models.AddSubscribersToProfile(id, subIDs)
+
+	err = models.AddSubscriberToProfile(userID, id)
 	if err != nil {
 		p.Response.Status = http.StatusInternalServerError
 		return p.RenderJSON(map[string]string{"error": err.Error()})
 	}
-	p.Response.Status = http.StatusNoContent
 	return p.RenderJSON(map[string]int{"status": http.StatusNoContent})
 }
 
-func (p Profiles) DeleteSubscribersFromProfile(id uint64) revel.Result {
-	var subIDs []uint64
-	err := p.Params.BindJSON(&subIDs)
+func (p Profiles) DeleteSubscriberFromProfile(id uint64) revel.Result {
+	userID, err := middleware.ValidateJWT(p.Request, "auth_token")
 	if err != nil {
-		p.Response.Status = http.StatusBadRequest
-		return p.RenderJSON(map[string]string{"error": err.Error()})
+		//p.Response.Status = http.StatusUnauthorized
+		return p.Redirect("/login")
 	}
-	err = models.DeleteSubscribersFromProfile(id, subIDs)
+
+	err = models.DeleteSubscriberFromProfile(userID, id)
 	if err != nil {
 		p.Response.Status = http.StatusInternalServerError
 		return p.RenderJSON(map[string]string{"error": err.Error()})
 	}
-	p.Response.Status = http.StatusNoContent
 	return p.RenderJSON(map[string]int{"status": http.StatusNoContent})
 }

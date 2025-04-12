@@ -6,88 +6,114 @@
     <title>Регистрация</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: #f8f9fa;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
             margin: 0;
+            color: #2c3e50;
         }
         .register-container {
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            width: 350px;
+            background-color: rgba(88, 130, 193, 0.15);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            width: 380px;
+            max-width: 90%;
+            text-align: center;
+            backdrop-filter: blur(2px);
+            border: 1px solid rgba(88, 130, 193, 0.2);
         }
         .register-container h2 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 30px;
+            color: #2c3e50;
+        }
+        .form-group {
             margin-bottom: 20px;
-            text-align: center;
+            text-align: left;
         }
-        .register-container input {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            font-size: 15px;
+            color: #2c3e50;
         }
-        .register-container button {
+        .form-group input,
+        .code-input input {
             width: 100%;
-            padding: 10px;
-            background-color: #28a745;
+            padding: 16px 15px;
+            border: 1px solid rgba(88, 130, 193, 0.3);
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s;
+            background-color: rgba(255, 255, 255, 0.8);
+            box-sizing: border-box; /* Добавлено */
+        }
+        .form-group input:focus,
+        .code-input input:focus {
+            outline: none;
+            border-color: #5882C1;
+            box-shadow: 0 0 0 2px rgba(88, 130, 193, 0.2);
+        }
+        .verify-button,
+        .register-btn {
+            width: 100%;
+            padding: 13px;
+            background-color: #3498db;
             color: #fff;
             border: none;
-            border-radius: 4px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
             cursor: pointer;
-        }
-        .register-container button:hover {
-            background-color: #218838;
-        }
-        .email-row {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-        .email-field {
-            flex-grow: 1;
+            transition: background-color 0.3s;
+            margin-top: 10px;
+            box-sizing: border-box;
         }
         .verify-button {
-            white-space: nowrap;
-            background-color: #3498db;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            padding: 10px;
-            cursor: pointer;
+            background-color: #4D38D7;
+            color: #fff;
         }
         .verify-button:hover {
-            background-color: #2980b9;
+            background-color: #3A2AA3;
         }
-        .code-input {
-            margin-bottom: 10px;
+        .register-btn {
+            background-color: #4D38D7;
+            color: #fff;
         }
-        .error {
-            color: red;
-            text-align: center;
-            margin-bottom: 10px;
-        }
-        .success {
-            color: green;
-            text-align: center;
-            margin-bottom: 10px;
+        .register-btn:hover {
+            background-color: #3A2AA3;
         }
         .register-link {
             text-align: center;
-            margin-top: 10px;
+            margin-top: 25px;
+            font-size: 15px;
+            color: #2c3e50;
         }
         .register-link a {
-            color: #007bff;
+            color: #4D38D7;
             text-decoration: none;
+            font-weight: 500;
         }
         .register-link a:hover {
             text-decoration: underline;
+        }
+        .error {
+            color: #e74c3c;
+            font-size: 14px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        .success {
+            color: green;
+            font-size: 14px;
+            margin-bottom: 15px;
+            text-align: center;
         }
         .verified-badge {
             display: none;
@@ -95,10 +121,24 @@
             font-weight: bold;
             margin-left: 10px;
         }
-        label {
+        .code-input {
+            margin-bottom: 10px;
+            text-align: left;
+        }
+        .code-input label {
             display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
+            margin-bottom: 8px;
+            font-weight: 500;
+            font-size: 15px;
+            color: #2c3e50;
+        }
+        .email-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .email-field {
+            flex-grow: 1;
         }
     </style>
 </head>
@@ -110,15 +150,11 @@
     <div id="errorMessage" class="error"></div>
 
     <form id="registerForm">
-        <div>
+        <div class="form-group">
             <label for="email">Логин (почта):</label>
-            <div class="email-row">
-                <div class="email-field">
-                    <input type="email" id="email" name="login" placeholder="Введите email" required>
-                </div>
-                <button type="button" id="verifyButton" class="verify-button">Подтвердить</button>
-                <span id="verifiedBadge" class="verified-badge">✓</span>
-            </div>
+            <input type="email" id="email" name="login" placeholder="Введите email" required>
+            <button type="button" id="verifyButton" class="verify-button">Подтвердить</button>
+            <span id="verifiedBadge" class="verified-badge">✓</span>
         </div>
 
         <div id="codeInput" class="code-input" style="display: none;">
@@ -126,11 +162,19 @@
             <input type="text" id="code" name="code" placeholder="Введите полученный код" required maxlength="6">
         </div>
 
-        <input type="text" name="first_name" placeholder="Имя" required>
-        <input type="text" name="last_name" placeholder="Фамилия" required>
-        <input type="password" name="password" placeholder="Пароль" required>
-        <button type="submit" id="registerButton">Зарегистрироваться</button>
+        <div class="form-group">
+            <input type="text" name="first_name" placeholder="Имя" required>
+        </div>
+        <div class="form-group">
+            <input type="text" name="last_name" placeholder="Фамилия" required>
+        </div>
+        <div class="form-group">
+            <input type="password" name="password" placeholder="Пароль" required>
+        </div>
+
+        <button type="submit" class="register-btn">Зарегистрироваться</button>
     </form>
+
     <div class="register-link">
         Уже есть аккаунт? <a href="/login">Войти</a>
     </div>
@@ -147,36 +191,31 @@
         const successMessage = document.getElementById('successMessage');
         const registerForm = document.getElementById('registerForm');
 
-        let isButtonDisabled = false; // Флаг для блокировки кнопки
-        let countdownInterval = null; // Интервал для отсчета времени
+        let isButtonDisabled = false;
+        let countdownInterval = null;
 
-        // Функция для отображения сообщений об ошибке
         function showError(message) {
             errorMessage.textContent = message;
             errorMessage.style.display = 'block';
             successMessage.style.display = 'none';
         }
 
-        // Функция для отображения сообщений об успехе
         function showSuccess(message) {
             successMessage.textContent = message;
             successMessage.style.display = 'block';
             errorMessage.style.display = 'none';
         }
 
-        // Функция проверки валидности email
         function isValidEmail(email) {
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             return emailRegex.test(email);
         }
 
-        // Функция для блокировки кнопки на 30 секунд
         function disableButtonFor30Seconds() {
             isButtonDisabled = true;
             verifyButton.disabled = true;
             let secondsLeft = 30;
 
-            // Обновляем текст кнопки каждую секунду
             countdownInterval = setInterval(() => {
                 verifyButton.textContent = `Повторная отправка (${secondsLeft} сек)`;
                 secondsLeft--;
@@ -190,7 +229,6 @@
             }, 1000);
         }
 
-        // Обработчик нажатия на кнопку "Подтвердить почту"
         verifyButton.addEventListener('click', function() {
             if (isButtonDisabled) {
                 showError('Пожалуйста, подождите 30 секунд перед повторной отправкой');
@@ -209,7 +247,6 @@
                 return;
             }
 
-            // Отправляем запрос на сервер для отправки кода подтверждения
             fetch('/send-verification-code-for-register', {
                 method: 'POST',
                 headers: {
@@ -224,7 +261,7 @@
                     } else {
                         showSuccess('Код подтверждения отправлен на вашу почту');
                         codeInput.style.display = 'block';
-                        disableButtonFor30Seconds(); // Блокируем кнопку на 30 секунд
+                        disableButtonFor30Seconds();
                     }
                 })
                 .catch(error => {
@@ -233,7 +270,6 @@
                 });
         });
 
-        // Обработчик отправки формы
         registerForm.addEventListener('submit', function(e) {
             e.preventDefault();
 
@@ -250,7 +286,6 @@
                 return;
             }
 
-            // Собираем данные из формы
             const formData = new FormData(e.target);
             const profileData = {};
 
@@ -260,13 +295,11 @@
                 }
             });
 
-            // Создаем объект для отправки согласно структуре VerifyProfile
             const jsonData = {
                 profile: profileData,
                 code: code
             };
 
-            // Отправка данных на сервер для регистрации
             fetch('/register', {
                 method: 'POST',
                 headers: {
