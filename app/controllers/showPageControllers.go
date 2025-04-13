@@ -65,3 +65,11 @@ func (p Publications) ShowUpdatePublicationPage() revel.Result {
 func (p Publications) ShowPublications() revel.Result {
 	return p.RenderTemplate("publications.html")
 }
+
+func (p Profiles) ShowAuthorsPage() revel.Result {
+	_, err := middleware.ValidateJWT(p.Request, "auth_token")
+	if err != nil {
+		return p.Redirect("/login")
+	}
+	return p.RenderTemplate("authors.html")
+}

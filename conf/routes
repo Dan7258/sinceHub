@@ -34,7 +34,6 @@ GET     /profiles/id/:id                            Profiles.GetProfileByID
 GET     /getUserData                                Profiles.GetUserData
 GET     /get-all-user-id-and-names                  Profiles.GetUsersDataForCreatePublication
 GET     /profile                                    Profiles.ShowUserProfile
-GET     /profiles                                   Profiles.GetAllProfiles
 GET     /login                                      Profiles.ShowLoginPage
 POST    /login                                      Profiles.Login
 GET     /logout                                     Profiles.Logout
@@ -56,6 +55,10 @@ DELETE  /profiles/:id/publications                  Profiles.DeletePublicationsF
 DELETE  /unsubscribe/:id                            Profiles.DeleteSubscriberFromProfile
 PATCH   /profiles/                                  Profiles.UpdateProfileByID
 PATCH   /profiles/login/:login                      Profiles.UpdateProfileByLogin
+
+GET     /authors                                    Profiles.ShowAuthorsPage
+GET     /get-authors-data                           Profiles.GetAllProfiles
+
 
 # Ignore favicon requests
 GET     /favicon.ico                            404

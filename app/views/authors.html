@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Авторы</title>
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2c3e50;
+            --text-color: #333;
+            --light-bg: #f4f7fa;
+            --card-bg: #fff;
+            --error-color: #e74c3c;
+            --muted-text: #7f8c8d;
+            --border-color: #e5e7eb;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--light-bg);
+            margin: 100px;
+            padding: 0;
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: min(900px, 95%);
+            margin: 20px auto;
+            padding: 2rem;
+            background: var(--card-bg);
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: var(--secondary-color);
+            border-bottom: 2px solid #5882C1;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+            font-size: clamp(1.5rem, 5vw, 2rem);
+        }
+
+        .search-bar {
+            margin-bottom: 1.5rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .search-bar input {
+            flex: 1;
+            padding: 0.75rem;
+            font-size: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-bar input:focus {
+            border-color: var(--primary-color);
+        }
+
+        .search-bar button {
+            padding: 0.75rem 1.5rem;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .search-bar button:hover {
+            background: #2980b9;
+        }
+
+        .author-card {
+            background: #f9fafb;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+        }
+
+        .author-card h2 {
+            margin: 0 0 10px;
+            font-size: 17px;
+            font-weight: 600;
+        }
+
+        .author-card p {
+            font-size: 14px;
+            margin: 6px 0;
+        }
+
+        .author-card a {
+            display: inline-block;
+            margin-top: 10px;
+            color: #4D38D7;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .author-card a:hover {
+            text-decoration: underline;
+        }
+
+        .loading {
+            color: var(--muted-text);
+            font-style: italic;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .error-message {
+            color: var(--error-color);
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .skeleton {
+            animation: pulse 1.5s infinite ease-in-out;
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            height: 1.5rem;
+        }
+
+        @keyframes pulse {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+    </style>
+</head>
+<body>
+{{template "header.html"}}
+<div class="container">
+    <h1>Авторы</h1>
+    <div class="search-bar">
+        <input type="text" id="search-input" placeholder="Поиск по ID или ФИО">
+        <button onclick="searchAuthors()">Поиск</button>
+    </div>
+    <div id="authors">
+        <!-- Skeleton loader -->
+        <div class="skeleton" style="width: 80%;"></div>
+        <div class="skeleton" style="width: 60%;"></div>
+        <div class="skeleton" style="width: 70%; height: 100px;"></div>
+        <div class="skeleton" style="width: 50%;"></div>
+    </div>
+</div>
+
+<script>
+    let allAuthors = [];
+
+    document.addEventListener("DOMContentLoaded", function() {
+        setTimeout(loadAuthors, 300);
+    });
+
+    function loadAuthors() {
+        const authorsContainer = document.getElementById('authors');
+
+        fetch('/get-authors-data', {
+            credentials: 'include',
+            headers: {
+                'Accept': 'application/json',
+                'Cache-Control': 'no-cache'
+            }
+        })
+            .then(async response => {
+                if (response.status === 401) {
+                    if (!window.location.pathname.includes('/login')) {
+                        window.location.href = '/login';
+                    }
+                    return;
+                }
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                allAuthors = data;
+                renderAuthors(data);
+            })
+            .catch(error => {
+                console.error('Ошибка при получении авторов:', error);
+                showError();
+            });
+    }
+
+    function renderAuthors(authors) {
+        const authorsContainer = document.getElementById('authors');
+
+        if (!authors || authors.length === 0) {
+            authorsContainer.innerHTML = '<p class="loading">Авторов нет</p>';
+            return;
+        }
+
+        const fragment = document.createDocumentFragment();
+
+        authors.forEach(author => {
+            const div = document.createElement('div');
+            div.className = 'author-card';
+
+            div.innerHTML = `
+                <h2>${escapeHtml(`${author.last_name || ''} ${author.first_name || ''} ${author.middle_name || ''}`.trim()) || 'Без имени'}</h2>
+                <p><strong>ID:</strong> ${escapeHtml(author.id || 'Не указан')}</p>
+                <p><strong>Ученая степень:</strong> ${escapeHtml(author.vac || 'Не указана')}</p>
+                <p><strong>Должность:</strong> ${escapeHtml(author.appointment || 'Не указана')}</p>
+                <p><strong>Страна:</strong> ${escapeHtml(author.country || 'Не указана')}</p>
+                <p><strong>Подписчики:</strong> ${author.SubscribersList ? author.SubscribersList.length : 0}</p>
+                <p><strong>Публикации:</strong> ${author.Publications ? author.Publications.length : 0}</p>
+                <a href="/user-profile/${escapeHtml(author.id)}">Посмотреть профиль</a>
+            `;
+
+            fragment.appendChild(div);
+        });
+
+        authorsContainer.innerHTML = '';
+        authorsContainer.appendChild(fragment);
+    }
+
+    function searchAuthors() {
+        const query = document.getElementById('search-input').value.trim().toLowerCase();
+        if (!query) {
+            renderAuthors(allAuthors);
+            return;
+        }
+
+        const filteredAuthors = allAuthors.filter(author => {
+            const idMatch = author.id && author.id.toString() === query;
+            const nameMatch = `${author.first_name || ''} ${author.last_name || ''} ${author.middle_name || ''}`
+                .toLowerCase()
+                .includes(query);
+            return idMatch || nameMatch;
+        });
+
+        renderAuthors(filteredAuthors);
+    }
+
+    function escapeHtml(unsafe) {
+        if (!unsafe) return '';
+        return unsafe.toString()
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
+    function showError() {
+        const authorsContainer = document.getElementById('authors');
+        authorsContainer.innerHTML = `
+            <div class="error-message">
+                Ошибка при загрузке авторов. Пожалуйста, попробуйте позже.
+                <button onclick="loadAuthors()" style="
+                    margin-top: 1rem;
+                    padding: 0.5rem 1rem;
+                    background: var(--primary-color);
+                    color: white;
+                    border: none;
+                    border-radius: 4px;
+                    cursor: pointer;
+                ">
+                    Повторить попытку
+                </button>
+            </div>
+        `;
+    }
+
+    // Handle Enter key for search
+    document.getElementById('search-input').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            searchAuthors();
+        }
+    });
+</script>
+</body>
+</html>

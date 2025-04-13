@@ -100,7 +100,12 @@ func GetProfileLoginData(login string) (*Profiles, error) {
 
 func GetAllProfiles() ([]Profiles, error) {
 	var profiles []Profiles
-	result := DB.Preload("Publications").Preload("SubscribersList").Preload("MySubscribesList").Find(&profiles)
+	result := DB.Select("id, first_name, last_name, middle_name, country, vac, appointment").
+		Preload("Publications").
+		Preload("SubscribersList").
+		Preload("MySubscribesList").
+		Find(&profiles)
+
 	if result.Error != nil {
 		return nil, result.Error
 	}

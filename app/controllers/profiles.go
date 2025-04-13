@@ -526,6 +526,11 @@ func (p Profiles) UpdateProfileByLogin(login string) revel.Result {
 }
 
 func (p Profiles) GetAllProfiles() revel.Result {
+	_, err := middleware.ValidateJWT(p.Request, "auth_token")
+	if err != nil {
+		//p.Response.Status = http.StatusUnauthorized
+		return p.Redirect("/login")
+	}
 	profiles, err := models.GetAllProfiles()
 	if err != nil {
 		p.Response.Status = http.StatusInternalServerError
