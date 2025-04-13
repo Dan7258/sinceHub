@@ -182,9 +182,12 @@ func DeleteProfileFromPublication(ID uint64, profileID uint64) error {
 
 func (pub *Publications) GetPublicationListByFilters(userID uint64, filters PublicationFiltres) ([]Publications, error) {
 	publications := make([]Publications, 0)
-	query := DB.Model(new(Publications)).Preload("Profiles", func(db *gorm.DB) *gorm.DB {
-		return db.Select("id, first_name, last_name, middle_name")
-	})
+	query := DB.Model(new(Publications)).
+		Joins("JOIN profile_publications ON profile_publications.publications_id = publications.id").
+		Where("profile_publications.profiles_id = ?", userID).
+		Preload("Profiles", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id, first_name, last_name, middle_name")
+		})
 	if !filters.DateStart.IsZero() {
 		query = query.Where("created_at >= ?", filters.DateStart)
 	}

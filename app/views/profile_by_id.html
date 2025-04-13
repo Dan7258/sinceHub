@@ -3,99 +3,213 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <title>Профиль пользователя</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #fff;
             margin: 0;
-            padding: 0;
+            font-family: "Segoe UI", sans-serif;
+            background-color: #f0f2f5;
             color: #333;
         }
+
         .container {
-            max-width: 95%;
-            margin: 50px auto;
-            padding: 20px;
-            padding-top: 80px;
-            display: flex;
-            gap: 20px;
-            flex-direction: column;
+            max-width: 1000px;
+            margin: 60px auto;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+            padding: 40px;
         }
+
         .profile-info {
             display: flex;
-            gap: 20px;
-            align-items: center;
+            align-items: flex-start;
+            gap: 24px;
+            margin-bottom: 32px;
         }
+
         .profile-info img {
-            width: 100px;
-            height: 100px;
+            width: 120px;
+            height: 120px;
             border-radius: 50%;
-            background: #ccc;
+            object-fit: cover;
+            background-color: #ddd;
         }
+
         .profile-details h2 {
-            margin: 5px 0;
+            margin: 0 0 4px;
+            font-size: 20px;
+            font-weight: 600;
         }
+
         .profile-details p {
-            margin: 5px 0;
-            font-size: 0.9em;
+            margin: 4px 0;
+            font-size: 14px;
+            color: #666;
         }
+
+        /* Общие стили для кнопок */
+        .btn {
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: 500;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out, box-shadow 0.2s, transform 0.1s;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Кнопка "Подписаться" */
+        .subscribe-btn {
+            background-color: #22c55e;
+            color: white;
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: 500;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out, box-shadow 0.2s, transform 0.1s;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .subscribe-btn:hover {
+            background-color: #16a34a;
+            box-shadow: 0 4px 10px rgba(34, 197, 94, 0.4);
+        }
+
+        .subscribe-btn:active {
+            transform: translateY(1px);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn i {
+            font-size: 16px;
+        }
+
+        /* Кнопка "Отписаться" */
+        .unsubscribe-btn {
+            background-color: #ef4444;
+            color: white;
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: 500;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 2px 6px rgba(239, 68, 68, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .unsubscribe-btn:hover {
+            background-color: #dc2626;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .unsubscribe-btn:active {
+            transform: translateY(1px);
+            box-shadow: 0 1px 3px rgba(239, 68, 68, 0.3);
+        }
+
+        .btn i {
+            font-size: 16px;
+        }
+
+        /* Остальные стили остаются без изменений */
         .main-content {
-            padding: 20px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
+            margin-top: 40px;
         }
+
+        .main-content h2 {
+            font-size: 20px;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
         .publication {
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            padding: 10px;
-            margin-bottom: 10px;
+            background: #f9fafb;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            margin-bottom: 20px;
+            border: 1px solid #e5e7eb;
         }
+
         .publication h3 {
             margin: 0 0 10px;
+            font-size: 17px;
+            font-weight: 600;
         }
-        .profiles a, .tags span {
-            background: #3498db;
-            color: #fff;
-            padding: 5px 10px;
-            border-radius: 15px;
-            margin-right: 5px;
+
+        .publication p {
+            font-size: 14px;
+            margin: 6px 0;
+        }
+
+        .profiles {
+            margin-top: 10px;
+        }
+
+        .profiles span {
             display: inline-block;
+            background-color: #2563eb;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 16px;
+            margin-right: 6px;
+            margin-top: 4px;
+            font-size: 13px;
             text-decoration: none;
         }
-        .profiles a:hover {
-            background: #2980b9;
-        }
-        .subscription-item {
-            display: inline-block;
-            padding: 5px 10px;
-            margin: 5px;
-            background: #007bff;
-            color: #fff;
-            border-radius: 3px;
+
+        .profiles a {
+            color: white;
             text-decoration: none;
         }
-        .subscription-item:hover {
-            background: #0056b3;
+
+        .tags {
+            margin-top: 10px;
         }
-        .subscribe-btn {
-            background: #28a745;
+
+        .tags span {
+            display: inline-block;
+            background-color: #10b981;
             color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 16px;
+            margin-right: 6px;
+            margin-top: 4px;
+            font-size: 13px;
         }
-        .unsubscribe-btn {
-            background: #e74c3c;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
+
         .error {
             color: #e74c3c;
             font-style: italic;
+            margin-top: 20px;
         }
     </style>
 </head>
@@ -115,8 +229,8 @@
             <p>Подписки: <span id="subscriptions_count"></span></p>
         </div>
     </div>
-    <button id="subscribe_btn" class="subscribe-btn">Подписаться</button>
-    <button id="unsubscribe_btn" class="unsubscribe-btn" style="display:none;">Отменить подписку</button>
+    <button id="subscribe_btn" class="subscribe-btn"></i>Подписаться</button>
+    <button id="unsubscribe_btn" class="unsubscribe-btn" style="display:none;"></i>Отписаться</button>
     <div class="main-content">
         <h2>Публикации</h2>
         <div id="publications">Загрузка...</div>
