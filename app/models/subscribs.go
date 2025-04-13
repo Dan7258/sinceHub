@@ -40,9 +40,9 @@ func DeleteSubscriberFromProfile(subID uint64, profileID uint64) error {
 
 func GetMySubscribersList(profileID uint64) ([]Profiles, error) {
 	profile := new(Profiles)
-	result := DB.Preload("SubscribersList", func(db *gorm.DB) *gorm.DB {
+	result := DB.Preload("SubscribersList.SubscribersList", func(db *gorm.DB) *gorm.DB {
 		return DB.Select("id, first_name, last_name, middle_name, country, vac, appointment")
-	}).Preload("Publications").First(profile, profileID)
+	}).Preload("SubscribersList.Publications").Preload("Publications").First(profile, profileID)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -51,9 +51,9 @@ func GetMySubscribersList(profileID uint64) ([]Profiles, error) {
 
 func GetMySubscribesList(profileID uint64) ([]Profiles, error) {
 	profile := new(Profiles)
-	result := DB.Preload("MySubscribesList", func(db *gorm.DB) *gorm.DB {
+	result := DB.Preload("MySubscribesList.SubscribersList", func(db *gorm.DB) *gorm.DB {
 		return DB.Select("id, first_name, last_name, middle_name, country, vac, appointment")
-	}).Preload("Publications").First(profile, profileID)
+	}).Preload("MySubscribesList.Publications").Preload("Publications").First(profile, profileID)
 	if result.Error != nil {
 		return nil, result.Error
 	}

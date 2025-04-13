@@ -4,180 +4,125 @@
     <base href="http://localhost:9000/">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet"/>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <title>Профиль пользователя</title>
     <style>
+        :root {
+            --bg-color: #f9fafb;
+            --primary: #2563eb;
+            --secondary: #6b7280;
+            --accent: #10b981;
+            --card-bg: #ffffff;
+            --border-color: #e5e7eb;
+            --text-color: #333;
+            --light-bg: #f4f7fa;
+            --error-color: #e74c3c;
+            --muted-text: #7f8c8d;
+        }
+
         body {
             margin: 0;
-            font-family: "Segoe UI", sans-serif;
-            background-color: #f0f2f5;
-            color: #333;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: #111827;
         }
 
         .container {
-            max-width: 1000px;
+            max-width: 1100px;
             margin: 60px auto;
-            background: #fff;
-            border-radius: 16px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
-            padding: 40px;
+            padding: 20px;
         }
 
-        .profile-info {
+        .profile-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
             display: flex;
-            align-items: flex-start;
-            gap: 24px;
-            margin-bottom: 32px;
+            gap: 20px;
+            align-items: center;
+            margin-bottom: 30px;
         }
 
-        .profile-info img {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            object-fit: cover;
-            background-color: #ddd;
+        .profile-card img {
+            width: 100px;
+            height: 100px;
+            border-radius: 100%;
+            background: #d1d5db;
         }
 
         .profile-details h2 {
-            margin: 0 0 4px;
-            font-size: 20px;
-            font-weight: 600;
+            margin: 0;
+            font-size: 1.5em;
         }
 
         .profile-details p {
             margin: 4px 0;
-            font-size: 14px;
-            color: #666;
+            color: var(--secondary);
         }
 
-        /* Общие стили для кнопок */
-        .btn {
-            padding: 10px 20px;
-            font-size: 14px;
-            font-weight: 500;
-            border: none;
-            border-radius: 20px;
-            cursor: pointer;
-            transition: background-color 0.2s ease-in-out, box-shadow 0.2s, transform 0.1s;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+        .action-buttons {
             display: flex;
-            align-items: center;
-            gap: 8px;
+            gap: 10px;
+            margin: 20px 0;
         }
 
-        .btn:focus {
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
-        }
-
-        .btn:active {
-            transform: translateY(1px);
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
-
-        /* Кнопка "Подписаться" */
-        .subscribe-btn {
-            background-color: #22c55e;
+        .action-buttons button {
+            background-color: #4D38D7;
             color: white;
-            padding: 10px 20px;
-            font-size: 14px;
-            font-weight: 500;
             border: none;
-            border-radius: 20px;
+            border-radius: 8px;
+            padding: 10px 18px;
+            font-weight: 600;
             cursor: pointer;
-            transition: background-color 0.2s ease-in-out, box-shadow 0.2s, transform 0.1s;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+            transition: background 0.2s ease;
             display: flex;
             align-items: center;
             gap: 8px;
         }
 
-        .subscribe-btn:hover {
-            background-color: #16a34a;
-            box-shadow: 0 4px 10px rgba(34, 197, 94, 0.4);
+        .action-buttons button:hover {
+            background-color: #3A2AA3;
         }
 
-        .subscribe-btn:active {
-            transform: translateY(1px);
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
-
-        .btn i {
-            font-size: 16px;
-        }
-
-        /* Кнопка "Отписаться" */
-        .unsubscribe-btn {
-            background-color: #ef4444;
-            color: white;
-            padding: 10px 20px;
-            font-size: 14px;
-            font-weight: 500;
-            border: none;
-            border-radius: 20px;
-            cursor: pointer;
-            transition: all 0.2s ease-in-out;
-            box-shadow: 0 2px 6px rgba(239, 68, 68, 0.3);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .unsubscribe-btn:hover {
-            background-color: #dc2626;
-            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
-            transform: translateY(-1px);
-        }
-
-        .unsubscribe-btn:active {
-            transform: translateY(1px);
-            box-shadow: 0 1px 3px rgba(239, 68, 68, 0.3);
-        }
-
-        .btn i {
-            font-size: 16px;
-        }
-
-        /* Остальные стили остаются без изменений */
         .main-content {
-            margin-top: 40px;
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.04);
         }
 
         .main-content h2 {
-            font-size: 20px;
-            margin-bottom: 20px;
-            font-weight: 600;
+            margin-top: 0;
+            font-size: 1.25em;
         }
 
         .publication {
-            background: #f9fafb;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-            margin-bottom: 20px;
-            border: 1px solid #e5e7eb;
+            background-color: #f9fafb;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
         }
 
         .publication h3 {
-            margin: 0 0 10px;
-            font-size: 17px;
-            font-weight: 600;
+            margin: 0 0 10px 0;
+            font-size: 1.1em;
         }
 
         .publication p {
-            font-size: 14px;
-            margin: 6px 0;
+            margin: 5px 0;
+            font-size: 0.95em;
         }
 
         .profiles {
-            margin-top: 10px;
+            margin-top: 0.75rem;
         }
 
         .profiles a {
             display: inline-block;
-            background: #2563eb;
+            background: #5882C1;
             color: white;
             padding: 0.35rem 0.75rem;
             border-radius: 4px;
@@ -185,7 +130,7 @@
             text-decoration: none;
             transition: all 0.2s ease;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            border: 1px solid #1e50c7;
+            border: 1px solid #5882C1;
             margin-right: 0.5rem;
             margin-top: 0.25rem;
         }
@@ -197,7 +142,7 @@
         }
 
         .tags {
-            margin-top: 10px;
+            margin-top: 0.75rem;
         }
 
         .tags span {
@@ -213,30 +158,40 @@
         }
 
         .error {
-            color: #e74c3c;
+            color: var(--error-color);
             font-style: italic;
             margin-top: 20px;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .profile-card {
+                flex-direction: column;
+                align-items: flex-start;
+            }
         }
     </style>
 </head>
 <body data-user-id="{{.id}}">
 {{template "header.html"}}
 <div class="container">
-    <div class="profile-info">
-        <img src="https://via.placeholder.com/100" alt="Аватар">
+    <div class="profile-card">
         <div class="profile-details">
-            <h2 id="first_name"></h2>
-            <h2 id="last_name"></h2>
-            <h2 id="middle_name"></h2>
+            <h2><span id="last_name"></span> <span id="first_name"></span> <span id="middle_name"></span></h2>
+            <p>ID: <strong id="user_id"></strong></p>
             <p>Ученая степень: <span id="academic_degree"></span></p>
+            <p>VAC: <span id="vac"></span></p>
             <p>Должность: <span id="appointment"></span></p>
             <p>Страна: <span id="country"></span></p>
-            <p>Подписчики: <span id="subscribers_count"></span></p>
-            <p>Подписки: <span id="subscriptions_count"></span></p>
+            <p>Подписчики: <span id="subscribers_count"></span> | Подписки: <span id="subscriptions_count"></span></p>
         </div>
     </div>
-    <button id="subscribe_btn" class="subscribe-btn"><i class="fas fa-user-plus"></i> Подписаться</button>
-    <button id="unsubscribe_btn" class="unsubscribe-btn" style="display:none;"><i class="fas fa-user-minus"></i> Отписаться</button>
+
+    <div class="action-buttons">
+        <button id="subscribe_btn"><i class="fas fa-user-plus"></i> Подписаться</button>
+        <button id="unsubscribe_btn" style="display:none;"><i class="fas fa-user-minus"></i> Отписаться</button>
+    </div>
+
     <div class="main-content">
         <h2>Публикации</h2>
         <div id="publications">Загрузка...</div>
@@ -259,14 +214,16 @@
                 return res.json();
             })
             .then(data => {
-                document.getElementById("first_name").innerText = data.Profile.first_name || 'Не указано';
-                document.getElementById("last_name").innerText = data.Profile.last_name || 'Не указано';
-                document.getElementById("middle_name").innerText = data.Profile.middle_name || 'Не указано';
-                document.getElementById("academic_degree").innerText = data.Profile.academic_degree || 'Не указана';
-                document.getElementById("appointment").innerText = data.Profile.appointment || 'Не указано';
-                document.getElementById("country").innerText = data.Profile.country || 'Не указана';
-                document.getElementById("subscribers_count").innerText = data.Profile.SubscribersList?.length || 0;
-                document.getElementById("subscriptions_count").innerText = data.Profile.MySubscribesList?.length || 0;
+                document.getElementById('user_id').innerText = data.Profile.id;
+                document.getElementById('first_name').innerText = data.Profile.first_name;
+                document.getElementById('last_name').innerText = data.Profile.last_name;
+                document.getElementById('middle_name').innerText = data.Profile.middle_name;
+                document.getElementById('country').innerText = data.Profile.country || 'Не указана';
+                document.getElementById('academic_degree').innerText = data.Profile.academic_degree || 'Не указана';
+                document.getElementById('vac').innerText = data.Profile.vac || 'Не указан';
+                document.getElementById('appointment').innerText = data.Profile.appointment || 'Не указано';
+                document.getElementById('subscribers_count').innerText = data.Profile.SubscribersList?.length || 0;
+                document.getElementById('subscriptions_count').innerText = data.Profile.MySubscribesList?.length || 0;
 
                 const publicationsDiv = document.getElementById("publications");
                 publicationsDiv.innerHTML = '';
@@ -285,7 +242,7 @@
                         // Авторы
                         const profilesDiv = document.createElement('div');
                         profilesDiv.className = 'profiles';
-                        profilesDiv.innerHTML = 'Авторы: ';
+                        profilesDiv.innerHTML = '<strong>Авторы:</strong> ';
                         if (pub.profiles && pub.profiles.length > 0) {
                             pub.profiles.forEach(profile => {
                                 const link = document.createElement('a');
@@ -301,7 +258,7 @@
                         // Теги
                         const tagsDiv = document.createElement('div');
                         tagsDiv.className = 'tags';
-                        tagsDiv.innerHTML = 'Теги: ';
+                        tagsDiv.innerHTML = '<strong>Теги:</strong> ';
                         if (pub.tags && pub.tags.length > 0) {
                             pub.tags.forEach(tag => {
                                 const span = document.createElement('span');
@@ -336,9 +293,9 @@
                 // Логика подписки/отписки
                 if (data.Isubscribed) {
                     document.getElementById('subscribe_btn').style.display = 'none';
-                    document.getElementById('unsubscribe_btn').style.display = 'inline-block';
+                    document.getElementById('unsubscribe_btn').style.display = 'inline-flex';
                 } else {
-                    document.getElementById('subscribe_btn').style.display = 'inline-block';
+                    document.getElementById('subscribe_btn').style.display = 'inline-flex';
                     document.getElementById('unsubscribe_btn').style.display = 'none';
                 }
             })
@@ -353,7 +310,7 @@
                 .then(res => {
                     if (res.ok) {
                         document.getElementById('subscribe_btn').style.display = 'none';
-                        document.getElementById('unsubscribe_btn').style.display = 'inline-block';
+                        document.getElementById('unsubscribe_btn').style.display = 'inline-flex';
                         const count = document.getElementById('subscribers_count');
                         count.innerText = parseInt(count.innerText) + 1;
                     } else {
@@ -368,7 +325,7 @@
             fetch(`/unsubscribe/${profileId}`, { method: 'DELETE', credentials: 'include' })
                 .then(res => {
                     if (res.ok) {
-                        document.getElementById('subscribe_btn').style.display = 'inline-block';
+                        document.getElementById('subscribe_btn').style.display = 'inline-flex';
                         document.getElementById('unsubscribe_btn').style.display = 'none';
                         const count = document.getElementById('subscribers_count');
                         count.innerText = parseInt(count.innerText) - 1;
@@ -380,5 +337,6 @@
         });
     });
 </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'92fcb43f6b075772',t:'MTc0NDU2NTU2MC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
 </body>
 </html>

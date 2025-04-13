@@ -211,7 +211,8 @@
             div.innerHTML = `
                 <h2>${escapeHtml(`${author.last_name || ''} ${author.first_name || ''} ${author.middle_name || ''}`.trim()) || 'Без имени'}</h2>
                 <p><strong>ID:</strong> ${escapeHtml(author.id || 'Не указан')}</p>
-                <p><strong>Ученая степень:</strong> ${escapeHtml(author.vac || 'Не указана')}</p>
+                <p><strong>Ученая степень:</strong> ${escapeHtml(author.academic_degree || 'Не указана')}</p>
+                <p><strong>VAC:</strong> ${escapeHtml(author.vac || 'Не указан')}</p>
                 <p><strong>Должность:</strong> ${escapeHtml(author.appointment || 'Не указана')}</p>
                 <p><strong>Страна:</strong> ${escapeHtml(author.country || 'Не указана')}</p>
                 <p><strong>Подписчики:</strong> ${author.SubscribersList ? author.SubscribersList.length : 0}</p>

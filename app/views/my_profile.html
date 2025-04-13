@@ -156,7 +156,7 @@
 
         .publication .profiles a {
             display: inline-block;
-            background: #2563eb;
+            background: #5882C1;
             color: white;
             padding: 0.35rem 0.75rem;
             border-radius: 4px;
@@ -164,7 +164,7 @@
             text-decoration: none;
             transition: all 0.2s ease;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            border: 1px solid #1e50c7;
+            border: 1px solid #5882C1;
             margin-right: 0.5rem;
             margin-top: 0.25rem;
         }
@@ -218,12 +218,11 @@
 {{template "header.html"}}
 <div class="container">
     <div class="profile-card">
-        <img src="https://via.placeholder.com/100" alt="Аватар">
         <div class="profile-details">
-            <h2><span id="first_name"></span> <span id="last_name"></span></h2>
-            <p><span id="middle_name"></span></p>
+            <h2><span id="last_name"></span> <span id="first_name"></span> <span id="middle_name"></span></h2>
             <p>ID: <strong id="user_id"></strong></p>
-            <p>Степень: <span id="academic_degree"></span></p>
+            <p>Ученая cтепень: <span id="academic_degree"></span></p>
+            <p>VAC: <span id="vac"></span></p>
             <p>Должность: <span id="appointment"></span></p>
             <p>Страна: <span id="country"></span></p>
             <p>Подписчики: <span id="subscribers_count"></span> | Подписки: <span id="subscriptions_count"></span></p>
@@ -284,11 +283,12 @@
             .then(data => {
                 document.querySelector('header').style.display = 'block';
                 document.getElementById('user_id').innerText = data.id;
-                document.getElementById('first_name').innerText = data.first_name || 'Не указано';
-                document.getElementById('last_name').innerText = data.last_name || 'Не указано';
-                document.getElementById('middle_name').innerText = data.middle_name || 'Не указано';
+                document.getElementById('first_name').innerText = data.first_name;
+                document.getElementById('last_name').innerText = data.last_name;
+                document.getElementById('middle_name').innerText = data.middle_name;
                 document.getElementById('country').innerText = data.country || 'Не указана';
                 document.getElementById('academic_degree').innerText = data.academic_degree || 'Не указана';
+                document.getElementById('vac').innerText = data.vac || 'Не указан';
                 document.getElementById('appointment').innerText = data.appointment || 'Не указано';
                 document.getElementById('subscribers_count').innerText = data.SubscribersList?.length || 0;
                 document.getElementById('subscriptions_count').innerText = data.MySubscribesList?.length || 0;
