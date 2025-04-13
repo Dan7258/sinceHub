@@ -5,178 +5,217 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Настройки</title>
     <!-- Подключаем Font Awesome для иконок -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #fff;
             margin: 0;
-            padding: 0;
+            font-family: "Segoe UI", sans-serif;
+            background-color: #f5f7fa;
             color: #333;
         }
 
-        * {
-            box-sizing: border-box;
-        }
-
         .container {
-            max-width: 1000px;
-            margin: 80px auto;
+            max-width: 960px;
+            margin: 60px auto;
             padding: 20px;
         }
+
         h1 {
-            font-size: 1.5em;
-            margin-bottom: 20px;
+            font-size: 2rem;
+            margin-bottom: 30px;
+            text-align: center;
         }
-        .settings-section {
+
+        h2 {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+        }
+
+        .card {
+            background-color: #fff;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
             margin-bottom: 30px;
         }
-        .settings-section h2 {
-            font-size: 1.2em;
-            margin-bottom: 10px;
-        }
-        .settings-section label {
+
+        label {
             display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-            word-wrap: break-word;
+            margin-bottom: 6px;
+            font-weight: 500;
         }
-        .settings-section input[type="text"],
-        .settings-section input[type="password"],
-        .settings-section select {
+
+        input[type="text"],
+        input[type="password"] {
             width: 100%;
-            padding: 10px;
-            margin-bottom: 15px;
+            padding: 12px;
             border: 1px solid #ccc;
-            border-radius: 5px;
+            border-radius: 8px;
+            margin-bottom: 20px;
             font-size: 1em;
         }
-        /* Добавим стиль для контейнера с паролем и иконкой */
+
+        button {
+            all: unset;
+            width: 142px;
+            height: 41px;
+            background-color: #4D38D7 !important;
+            color: white !important;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            text-align: center;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        button:hover {
+            background-color: #3b2bb3 !important;
+        }
+
+        button.secondary {
+            background-color: #6c757d;
+        }
+
+        button.secondary:hover {
+            background-color: #565e64;
+        }
+
+
         .password-container {
             position: relative;
         }
-        .password-container input {
-            padding-right: 40px; /* Оставим место для иконки */
-        }
-        .password-container .toggle-password {
+
+        .toggle-password {
             position: absolute;
-            right: 10px;
+            right: 12px;
             top: 50%;
             transform: translateY(-50%);
             cursor: pointer;
-            color: #666;
-            font-size: 1.2em;
-        }
-        .settings-section .row {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 15px;
-            flex-wrap: wrap;
-        }
-        .settings-section .row > div {
-            flex: 1;
-            min-width: 200px;
-        }
-        .settings-section button {
-            padding: 10px 20px;
-            background-color: #28a745;
-            color: #fff;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 1em;
-        }
-        .settings-section button:hover {
-            background-color: #218838;
+            color: #888;
         }
 
-        @media (max-width: 768px) {
-            .settings-section .row {
-                flex-direction: column;
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .button-row {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .code-block {
+            margin-top: 15px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Media */
+        @media (max-width: 600px) {
+            .container {
+                padding: 15px;
             }
-            .settings-section .row > div {
-                min-width: 100%;
+
+            h1 {
+                font-size: 1.5rem;
             }
         }
+
     </style>
 </head>
 <body>
-{{template "header.html"}} <!-- Подключение header -->
-<div class="container">
-    <h1>Настройки</h1>
-    <div class="settings-section">
+{{template "header.html"}}
+<main class="container">
+
+    <!-- Секция "О себе" -->
+    <section class="card">
         <h2>О себе</h2>
-        <div class="row">
+        <div class="grid-3">
             <div>
                 <label for="last_name">Фамилия</label>
-                <input type="text" id="last_name" placeholder="Фамилия">
+                <input type="text" id="last_name" placeholder="Фамилия" />
             </div>
             <div>
                 <label for="first_name">Имя</label>
-                <input type="text" id="first_name" placeholder="Имя">
+                <input type="text" id="first_name" placeholder="Имя" />
             </div>
             <div>
                 <label for="middle_name">Отчество</label>
-                <input type="text" id="middle_name" placeholder="Отчество">
+                <input type="text" id="middle_name" placeholder="Отчество" />
             </div>
-        </div>
-        <div class="row">
             <div>
                 <label for="country">Страна</label>
-                <input type="text" id="country" placeholder="Страна">
+                <input type="text" id="country" placeholder="Страна" />
             </div>
             <div>
                 <label for="academic_degree">Учёная степень</label>
-                <input type="text" id="academic_degree" placeholder="Учёная степень">
+                <input type="text" id="academic_degree" placeholder="Учёная степень" />
             </div>
-        </div>
-        <div class="row">
             <div>
                 <label for="vac">ВАК</label>
-                <input type="text" id="vac" placeholder="ВАК">
+                <input type="text" id="vac" placeholder="ВАК" />
             </div>
             <div>
                 <label for="appointment">Должность</label>
-                <input type="text" id="appointment" placeholder="Должность">
+                <input type="text" id="appointment" placeholder="Должность" />
             </div>
         </div>
         <button id="saveProfileButton">Сохранить</button>
-    </div>
-    <div class="settings-section">
+    </section>
+
+    <!-- Секция "Смена логина" -->
+    <section class="card">
         <h2>Смена логина</h2>
         <label for="new_login">Новый логин</label>
-        <input type="text" id="new_login" placeholder="Текущий логин">
+        <input type="text" id="new_login" placeholder="Текущий логин" />
         <button id="changeLoginButton">Изменить логин</button>
-        <!-- Поле для ввода кода и кнопки "Подтвердить" и "Остановить изменение" -->
-        <div id="codeSection" style="display: none;">
+
+        <div id="codeSection" class="code-block hidden">
             <label for="verification_code">Код подтверждения</label>
-            <input type="text" id="verification_code" placeholder="Введите код с почты">
-            <div class="button-group">
+            <input type="text" id="verification_code" placeholder="Введите код с почты" />
+            <div class="button-row">
                 <button id="verifyCodeButton">Подтвердить</button>
-                <button id="stopChangeButton">Остановить изменение</button>
+                <button id="stopChangeButton" class="secondary">Остановить</button>
             </div>
         </div>
-    </div>
-    <div class="settings-section">
+    </section>
+
+    <!-- Секция "Безопасность" -->
+    <section class="card">
         <h2>Безопасность</h2>
         <label for="current_password">Текущий пароль</label>
         <div class="password-container">
-            <input type="password" id="current_password" placeholder="Введите текущий пароль">
+            <input type="password" id="current_password" placeholder="Введите текущий пароль" />
             <i class="fas fa-eye toggle-password" id="toggleCurrentPassword"></i>
         </div>
+
         <label for="new_password">Новый пароль</label>
-        <input type="password" id="new_password" placeholder="Введите новый пароль">
+        <input type="password" id="new_password" placeholder="Введите новый пароль" />
+
         <label for="confirm_password">Подтвердите пароль</label>
-        <input type="password" id="confirm_password" placeholder="Подтвердите новый пароль">
+        <input type="password" id="confirm_password" placeholder="Подтвердите новый пароль" />
+
         <button id="changePasswordButton">Изменить пароль</button>
-        <div id="passwordCodeSection" style="display: none;">
+
+        <div id="passwordCodeSection" class="code-block hidden">
             <label for="password_verification_code">Код подтверждения</label>
-            <input type="text" id="password_verification_code" placeholder="Введите код">
-            <button id="verifyPasswordCodeButton">Подтвердить</button>
-            <button id="stopChangePasswordButton">Остановить изменение</button>
+            <input type="text" id="password_verification_code" placeholder="Введите код" />
+            <div class="button-row">
+                <button id="verifyPasswordCodeButton">Подтвердить</button>
+                <button id="stopChangePasswordButton" class="secondary">Остановить</button>
+            </div>
         </div>
-    </div>
-</div>
+    </section>
+</main>
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         // Переменная для хранения текущего логина пользователя

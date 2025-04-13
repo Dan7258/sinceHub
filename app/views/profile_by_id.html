@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
+    <base href="http://localhost:9000/">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
@@ -174,21 +175,25 @@
             margin-top: 10px;
         }
 
-        .profiles span {
+        .profiles a {
             display: inline-block;
-            background-color: #2563eb;
+            background: #2563eb;
             color: white;
-            padding: 5px 10px;
-            border-radius: 16px;
-            margin-right: 6px;
-            margin-top: 4px;
-            font-size: 13px;
+            padding: 0.35rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.875rem;
             text-decoration: none;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid #1e50c7;
+            margin-right: 0.5rem;
+            margin-top: 0.25rem;
         }
 
-        .profiles a {
-            color: white;
-            text-decoration: none;
+        .profiles a:hover {
+            background: #1d4ed8;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.15);
         }
 
         .tags {
@@ -197,13 +202,14 @@
 
         .tags span {
             display: inline-block;
-            background-color: #10b981;
-            color: white;
-            padding: 5px 10px;
-            border-radius: 16px;
-            margin-right: 6px;
-            margin-top: 4px;
-            font-size: 13px;
+            color: #3178c6;
+            background-color: #f0f6ff;
+            padding: 0.1rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            margin-right: 0.5rem;
+            margin-top: 0.25rem;
+            border: none;
         }
 
         .error {
@@ -229,8 +235,8 @@
             <p>Подписки: <span id="subscriptions_count"></span></p>
         </div>
     </div>
-    <button id="subscribe_btn" class="subscribe-btn"></i>Подписаться</button>
-    <button id="unsubscribe_btn" class="unsubscribe-btn" style="display:none;"></i>Отписаться</button>
+    <button id="subscribe_btn" class="subscribe-btn"><i class="fas fa-user-plus"></i> Подписаться</button>
+    <button id="unsubscribe_btn" class="unsubscribe-btn" style="display:none;"><i class="fas fa-user-minus"></i> Отписаться</button>
     <div class="main-content">
         <h2>Публикации</h2>
         <div id="publications">Загрузка...</div>
@@ -272,8 +278,8 @@
                         pubDiv.innerHTML = `
                             <h3>${pub.title || 'Без названия'}</h3>
                             <p><strong>Аннотация:</strong> ${pub.abstract || 'Нет аннотации'}</p>
-                            <p><strong>Создано:</strong> ${pub.created_at ? new Date(pub.created_at).toLocaleString() : 'Не указано'}</p>
-                            <p><strong>Обновлено:</strong> ${pub.updated_at ? new Date(pub.updated_at).toLocaleString() : 'Не указано'}</p>
+                            <p><strong>Создано:</strong> ${new Date(pub.created_at).toLocaleDateString()}</p>
+                            <p><strong>Обновлено:</strong> ${new Date(pub.updated_at).toLocaleDateString()}</p>
                         `;
 
                         // Авторы
@@ -282,14 +288,10 @@
                         profilesDiv.innerHTML = 'Авторы: ';
                         if (pub.profiles && pub.profiles.length > 0) {
                             pub.profiles.forEach(profile => {
-                                const span = document.createElement('span');
                                 const link = document.createElement('a');
-                                link.href = `/user-profile/${profile.id}`; // Ссылка на страницу профиля автора
+                                link.href = `/user-profile/${profile.id}`;
                                 link.innerText = `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'Неизвестный автор';
-                                link.style.color = 'white'; // Сделать ссылку белым цветом для видимости
-                                link.style.textDecoration = 'none'; // Убираем подчеркивание
-                                span.appendChild(link);
-                                profilesDiv.appendChild(span);
+                                profilesDiv.appendChild(link);
                             });
                         } else {
                             profilesDiv.innerHTML += 'Авторы не указаны';
@@ -311,6 +313,20 @@
                         }
                         pubDiv.appendChild(tagsDiv);
 
+                        // Ссылка для скачивания файла
+                        if (pub.file_link) {
+                            const downloadLink = document.createElement('a');
+                            downloadLink.href = pub.file_link.replace('/user-profile', '');
+                            downloadLink.target = '_blank';
+                            downloadLink.style.marginTop = '10px';
+                            downloadLink.style.display = 'inline-block';
+                            downloadLink.style.color = '#4D38D7';
+                            downloadLink.style.textDecoration = 'none';
+                            downloadLink.style.marginRight = '15px';
+                            downloadLink.innerHTML = '📄 Скачать статью (PDF)';
+                            pubDiv.appendChild(downloadLink);
+                        }
+
                         publicationsDiv.appendChild(pubDiv);
                     });
                 } else {
@@ -319,11 +335,11 @@
 
                 // Логика подписки/отписки
                 if (data.Isubscribed) {
-                    document.getElementById('subscribe_btn').style.display = 'none';  // Скрыть кнопку "Подписаться"
-                    document.getElementById('unsubscribe_btn').style.display = 'inline-block';  // Показать кнопку "Отписаться"
+                    document.getElementById('subscribe_btn').style.display = 'none';
+                    document.getElementById('unsubscribe_btn').style.display = 'inline-block';
                 } else {
-                    document.getElementById('subscribe_btn').style.display = 'inline-block';  // Показать кнопку "Подписаться"
-                    document.getElementById('unsubscribe_btn').style.display = 'none';  // Скрыть кнопку "Отписаться"
+                    document.getElementById('subscribe_btn').style.display = 'inline-block';
+                    document.getElementById('unsubscribe_btn').style.display = 'none';
                 }
             })
             .catch(error => {
@@ -336,11 +352,8 @@
             fetch(`/subscribe/${profileId}`, { method: 'POST', credentials: 'include' })
                 .then(res => {
                     if (res.ok) {
-                        // Переключаем кнопки
                         document.getElementById('subscribe_btn').style.display = 'none';
                         document.getElementById('unsubscribe_btn').style.display = 'inline-block';
-
-                        // Обновление количества подписчиков
                         const count = document.getElementById('subscribers_count');
                         count.innerText = parseInt(count.innerText) + 1;
                     } else {
@@ -355,11 +368,8 @@
             fetch(`/unsubscribe/${profileId}`, { method: 'DELETE', credentials: 'include' })
                 .then(res => {
                     if (res.ok) {
-                        // Переключаем кнопки
                         document.getElementById('subscribe_btn').style.display = 'inline-block';
                         document.getElementById('unsubscribe_btn').style.display = 'none';
-
-                        // Обновление количества подписчиков
                         const count = document.getElementById('subscribers_count');
                         count.innerText = parseInt(count.innerText) - 1;
                     } else {
@@ -370,7 +380,5 @@
         });
     });
 </script>
-
-
 </body>
 </html>

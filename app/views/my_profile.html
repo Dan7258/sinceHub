@@ -13,6 +13,10 @@
             --accent: #10b981;
             --card-bg: #ffffff;
             --border-color: #e5e7eb;
+            --text-color: #333;
+            --light-bg: #f4f7fa;
+            --error-color: #e74c3c;
+            --muted-text: #7f8c8d;
         }
 
         body {
@@ -146,6 +150,43 @@
             font-size: 0.95em;
         }
 
+        .publication .profiles {
+            margin-top: 0.75rem;
+        }
+
+        .publication .profiles a {
+            display: inline-block;
+            background: #2563eb;
+            color: white;
+            padding: 0.35rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid #1e50c7;
+            margin-right: 0.5rem;
+            margin-top: 0.25rem;
+        }
+
+        .publication .profiles a:hover {
+            background: #1d4ed8;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+        }
+
+        .publication .tags span {
+            display: inline-block;
+            color: #3178c6;
+            background-color: #f0f6ff;
+            padding: 0.1rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            margin-right: 0.5rem;
+            margin-top: 0.25rem;
+            border: none;
+        }
+
         .subscription-item {
             display: inline-block;
             padding: 8px 14px;
@@ -224,11 +265,6 @@
         <h2>Публикации</h2>
         <div id="publications">Загрузка...</div>
 
-        <h2>Подписчики</h2>
-        <div id="subscribers_list">Загрузка...</div>
-
-        <h2>Подписки</h2>
-        <div id="my_subscribes_list">Загрузка...</div>
     </div>
 </div>
 <script>
@@ -269,28 +305,25 @@
                             <p><strong>Аннотация:</strong> ${pub.abstract || 'Нет аннотации'}</p>
                             <p><strong>Создано:</strong> ${new Date(pub.created_at).toLocaleDateString()}</p>
                             <p><strong>Обновлено:</strong> ${new Date(pub.updated_at).toLocaleDateString()}</p>
-
-                            <div style="margin: 10px 0;">
+                            <div class="profiles">
                                 <strong>Соавторы:</strong> ${
                             pub.profiles && pub.profiles.length > 0
                                 ? pub.profiles
-                                .filter(p => p.id !== data.id) // 🔥 исключаем текущего юзера
-                                .map(p => `${p.first_name || ''} ${p.last_name || ''}`.trim())
-                                .join(', ') || 'Соавторы не указаны'
+                                    .filter(p => p.id !== data.id)
+                                    .map(p => `<a href="/user-profile/${p.id}">${(p.first_name || '')} ${(p.last_name || '')}</a>`.trim())
+                                    .join('')
                                 : 'Соавторы не указаны'
                         }
                             </div>
-
-                            <div style="margin: 10px 0;">
+                            <div class="tags">
                                 <strong>Теги:</strong> ${
                             pub.tags && pub.tags.length > 0
-                                ? pub.tags.map(tag => `<span style="background:#3498db; color:white; padding:3px 8px; border-radius:12px; margin-right:5px;">${tag.name}</span>`).join(' ')
+                                ? pub.tags.map(tag => `<span>${tag.name}</span>`).join('')
                                 : 'Теги не указаны'
                         }
                             </div>
-
                             <div style="margin-top: 10px;">
-                                ${pub.file_link ? `<a href="${pub.file_link}" target="_blank" style="margin-right: 15px; color:#2980b9; text-decoration: none;">📄 Скачать статью (PDF)</a>` : ''}
+                                ${pub.file_link ? `<a href="${pub.file_link}" target="_blank" style="margin-right: 15px; color:#4D38D7; text-decoration: none;">📄 Скачать статью (PDF)</a>` : ''}
                                 ${
                             isOwner
                                 ? `<a href="/update-publication?id=${pub.id}" style="color: #e67e22; text-decoration: none; margin-right: 15px;">✏️ Редактировать</a>`
@@ -303,32 +336,7 @@
                 } else {
                     publicationsList.innerHTML = 'Публикаций нет';
                 }
-                const subscribersList = document.getElementById('subscribers_list');
-                subscribersList.innerHTML = '';
-                if (data.SubscribersList && data.SubscribersList.length > 0) {
-                    data.SubscribersList.forEach(sub => {
-                        const a = document.createElement('a');
-                        a.className = 'subscription-item';
-                        a.href = '#';
-                        a.innerText = `${sub.first_name} ${sub.last_name}`.trim() || 'Неизвестный';
-                        subscribersList.appendChild(a);
-                    });
-                } else {
-                    subscribersList.innerHTML = 'Подписчиков нет';
-                }
-                const mySubscribesList = document.getElementById('my_subscribes_list');
-                mySubscribesList.innerHTML = '';
-                if (data.MySubscribesList && data.MySubscribesList.length > 0) {
-                    data.MySubscribesList.forEach(sub => {
-                        const a = document.createElement('a');
-                        a.className = 'subscription-item unsubscribed';
-                        a.href = '#';
-                        a.innerText = `${sub.first_name} ${sub.last_name}`.trim() || 'Неизвестный';
-                        mySubscribesList.appendChild(a);
-                    });
-                } else {
-                    mySubscribesList.innerHTML = 'Подписок нет';
-                }
+
             })
             .catch(error => {
                 console.error('Ошибка при получении профиля:', error);
@@ -339,8 +347,6 @@
             window.location.href = '/create-publication';
         });
     });
-
-
 
     function notMyPublication(publicationId) {
         const confirmed = confirm("Вы точно не являетесь соавтором публикации?");
@@ -373,7 +379,6 @@
             });
     }
 
-    (function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'923dc6de589e12ee',t:'MTc0MjU2MzU0Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();
     function downloadFilteredPublications() {
         const count = parseInt(document.getElementById('count_publications').value);
         const dateStart = document.getElementById('date_start').value;
@@ -412,7 +417,6 @@
                 alert("Не удалось получить файл публикаций.");
             });
     }
-
 </script>
 </body>
 </html>
