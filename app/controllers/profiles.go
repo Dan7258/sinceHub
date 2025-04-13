@@ -540,6 +540,36 @@ func (p Profiles) GetAllProfiles() revel.Result {
 	return p.RenderJSON(profiles)
 }
 
+func (p Profiles) GetMySubscribersList() revel.Result {
+	userID, err := middleware.ValidateJWT(p.Request, "auth_token")
+	if err != nil {
+		//p.Response.Status = http.StatusUnauthorized
+		return p.Redirect("/login")
+	}
+	profiles, err := models.GetMySubscribersList(userID)
+	if err != nil {
+		p.Response.Status = http.StatusInternalServerError
+		return p.RenderJSON(map[string]string{"error": err.Error()})
+	}
+	p.Response.Status = http.StatusOK
+	return p.RenderJSON(profiles)
+}
+
+func (p Profiles) GetMySubscribesList() revel.Result {
+	userID, err := middleware.ValidateJWT(p.Request, "auth_token")
+	if err != nil {
+		//p.Response.Status = http.StatusUnauthorized
+		return p.Redirect("/login")
+	}
+	profiles, err := models.GetMySubscribesList(userID)
+	if err != nil {
+		p.Response.Status = http.StatusInternalServerError
+		return p.RenderJSON(map[string]string{"error": err.Error()})
+	}
+	p.Response.Status = http.StatusOK
+	return p.RenderJSON(profiles)
+}
+
 func (p Profiles) AddPublicationsToProfile(id uint64) revel.Result {
 	var pubIDs []uint64
 	err := p.Params.BindJSON(&pubIDs)

@@ -1,5 +1,7 @@
 package models
 
+import "gorm.io/gorm"
+
 type Subscribs struct {
 	ProfilesId    uint64 `json:"profiles_id" gorm:"primaryKey;not null"`
 	SubscribersID uint64 `json:"subscribers_id" gorm:"primaryKey;not null"`
@@ -34,4 +36,26 @@ func DeleteSubscriberFromProfile(subID uint64, profileID uint64) error {
 		return result.Error
 	}
 	return nil
+}
+
+func GetMySubscribersList(profileID uint64) ([]Profiles, error) {
+	profile := new(Profiles)
+	result := DB.Preload("SubscribersList", func(db *gorm.DB) *gorm.DB {
+		return DB.Select("id, first_name, last_name, middle_name, country, vac, appointment")
+	}).Preload("Publications").First(profile, profileID)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return profile.SubscribersList, nil
+}
+
+func GetMySubscribesList(profileID uint64) ([]Profiles, error) {
+	profile := new(Profiles)
+	result := DB.Preload("MySubscribesList", func(db *gorm.DB) *gorm.DB {
+		return DB.Select("id, first_name, last_name, middle_name, country, vac, appointment")
+	}).Preload("Publications").First(profile, profileID)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return profile.MySubscribesList, nil
 }

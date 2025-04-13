@@ -73,3 +73,19 @@ func (p Profiles) ShowAuthorsPage() revel.Result {
 	}
 	return p.RenderTemplate("authors.html")
 }
+
+func (p Profiles) ShowMySubscribers() revel.Result {
+	_, err := middleware.ValidateJWT(p.Request, "auth_token")
+	if err != nil {
+		return p.Redirect("/login")
+	}
+	return p.RenderTemplate("my_subscribers.html")
+}
+
+func (p Profiles) ShowMySubscribes() revel.Result {
+	_, err := middleware.ValidateJWT(p.Request, "auth_token")
+	if err != nil {
+		return p.Redirect("/login")
+	}
+	return p.RenderTemplate("my_subscribes.html")
+}
