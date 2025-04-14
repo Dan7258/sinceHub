@@ -1,8 +1,9 @@
 package app
 
 import (
-	_ "github.com/revel/modules"
 	"github.com/revel/revel"
+	_ "github.com/revel/modules"
+
 )
 
 var (

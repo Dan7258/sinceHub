@@ -1,11 +1,33 @@
-FROM postgres:latest
+# Стадия сборки
+FROM golang:1.21.0 AS builder
 
-ENV POSTGRES_USER=admin
-ENV POSTGRES_PASSWORD=admin
-ENV POSTGRES_DB=scinceHubDB
+WORKDIR /app
 
-COPY init.sql /docker-entrypoint-initdb.d/
+# Копируем go.mod и go.sum
+COPY go.mod go.sum ./
+RUN go mod download
 
-EXPOSE 5432
+# Копируем весь код
+COPY . .
 
-CMD ["postgres"]
+# Устанавливаем Revel CLI
+RUN go install github.com/revel/cmd/revel@latest
+
+# Собираем приложение (если нужно, убери, если используешь revel run)
+# RUN revel build -a . -t /app/target
+
+# Финальная стадия
+FROM golang:1.21.0
+
+WORKDIR /app
+
+# Устанавливаем Revel CLI
+RUN go install github.com/revel/cmd/revel@latest
+
+# Копируем код из builder
+COPY --from=builder /app /app
+
+EXPOSE 9000
+
+# Запускаем приложение
+CMD ["revel", "run", "-a", "."]

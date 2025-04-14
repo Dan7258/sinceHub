@@ -2,9 +2,9 @@ package controllers
 
 import (
 	"github.com/revel/revel"
-	"sinceHub/app/middleware"
-	"sinceHub/app/models"
-	"sinceHub/app/smtp"
+	"scinceHub/app/middleware"
+	"scinceHub/app/models"
+	"scinceHub/app/smtp"
 )
 
 type App struct {

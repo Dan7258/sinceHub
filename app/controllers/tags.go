@@ -4,7 +4,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/revel/revel"
 	"net/http"
-	"sinceHub/app/models"
+	"scinceHub/app/models"
 )
 
 type Tags struct {

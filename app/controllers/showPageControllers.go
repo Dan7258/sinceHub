@@ -2,7 +2,7 @@ package controllers
 
 import (
 	"github.com/revel/revel"
-	"sinceHub/app/middleware"
+	"scinceHub/app/middleware"
 )
 
 func (p Profiles) ShowLoginPage() revel.Result {

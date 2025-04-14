@@ -8,7 +8,7 @@ import (
 	"github.com/unidoc/unioffice/measurement"
 	"github.com/unidoc/unioffice/schema/soo/wml"
 	"os"
-	"sinceHub/app/models"
+	"scinceHub/app/models"
 	"strings"
 )
 

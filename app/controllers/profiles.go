@@ -8,9 +8,9 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"math/big"
 	"net/http"
-	"sinceHub/app/middleware"
-	"sinceHub/app/models"
-	"sinceHub/app/smtp"
+	"scinceHub/app/middleware"
+	"scinceHub/app/models"
+	"scinceHub/app/smtp"
 	"time"
 )
 
