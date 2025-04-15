@@ -3,4 +3,4 @@ tmp/
 routes/
 *.idea/
 .env
-public/uploads/
+public/uploads/*.pdf

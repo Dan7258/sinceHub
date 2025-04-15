@@ -45,7 +45,6 @@ POST    /settings/stop-change-password              Profiles.StopChangePassword
 GET     /settings                                   Profiles.ShowSettingsPage
 POST    /subscribe/:id                              Profiles.AddSubscriberToProfile
 DELETE  /profiles/id/:id                            Profiles.DeleteProfileByID
-DELETE  /profiles/login/:login                      Profiles.DeleteProfileByLogin
 DELETE  /unsubscribe/:id                            Profiles.DeleteSubscriberFromProfile
 PATCH   /profiles/                                  Profiles.UpdateProfileByID
 

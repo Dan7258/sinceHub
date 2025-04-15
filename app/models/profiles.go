@@ -3,6 +3,8 @@ package models
 import (
 	"fmt"
 	"gorm.io/gorm"
+	"os"
+	"strings"
 )
 
 type Profiles struct {
@@ -123,12 +125,40 @@ func GetAllProfileIDAndNames() ([]Profiles, error) {
 
 func DeleteProfileByID(ID uint64) error {
 	profile := new(Profiles)
+	err := DB.Model(new(Subscribs)).Where("profiles_id = ? OR subscribers_id = ?", ID, ID).Delete(new(Subscribs)).Error
+	if err != nil {
+		return err
+	}
+	err = DB.Model(new(Publications)).Where("owner_id = ?", ID).Delete(new(Publications)).Error
+	if err != nil {
+		return err
+	}
 	result := DB.Delete(profile, ID)
 	if result.Error != nil {
 		return result.Error
 	}
+	err = RemoveFilesByUseID(ID)
+	if err != nil {
+		return err
+	}
 	if result.RowsAffected == 0 {
 		return fmt.Errorf("Профиль с ID %d не найден", ID)
+	}
+	return nil
+}
+
+func RemoveFilesByUseID(ID uint64) error {
+	dir := "public/uploads/"
+	files, err := os.ReadDir(dir)
+	if err != nil {
+		return err
+	}
+	for _, file := range files {
+		f := strings.Split(file.Name(), "_")
+		if !file.IsDir() && f[0] == fmt.Sprintf("%d", ID) {
+			os.Remove(dir + file.Name())
+		}
+
 	}
 	return nil
 }
