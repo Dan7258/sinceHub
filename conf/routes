@@ -55,6 +55,11 @@ GET     /subscribes                                 Profiles.ShowMySubscribes
 GET     /get-subscribers-data                       Profiles.GetMySubscribersList
 GET     /get-subscribes-data                        Profiles.GetMySubscribesList
 
+GET     /admin                                      Admins.ShowAdminPage
+GET     /login-admin                                Admins.ShowLoginAdminPage
+POST    /login-admin                                Admins.LoginAdmin
+GET     /logout-admin                               Admins.LogoutAdmin
+
 # Ignore favicon requests
 GET     /favicon.ico                            404
 

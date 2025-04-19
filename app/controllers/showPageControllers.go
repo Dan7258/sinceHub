@@ -8,7 +8,9 @@ import (
 func (p Profiles) ShowLoginPage() revel.Result {
 	return p.RenderTemplate("login.html")
 }
-
+func (a Admins) ShowLoginAdminPage() revel.Result {
+	return a.RenderTemplate("login_admin.html")
+}
 func (p Profiles) ShowRegisterPage() revel.Result {
 	return p.RenderTemplate("register.html")
 }
@@ -30,6 +32,15 @@ func (p Profiles) ShowUserProfile() revel.Result {
 	}
 
 	return p.RenderTemplate("my_profile.html")
+}
+
+func (a Admins) ShowAdminPage() revel.Result {
+	_, err := middleware.ValidateAdminJWT(a.Request, "auth_token_admin")
+	if err != nil {
+		//p.Response.Status = http.StatusUnauthorized
+		return a.Redirect("/login-admin")
+	}
+	return a.RenderTemplate("admin.html")
 }
 
 func (p Profiles) ShowUserProfilePageByID(id uint64) revel.Result {

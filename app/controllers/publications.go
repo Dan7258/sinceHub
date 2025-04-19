@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/go-playground/validator/v10"
 	"github.com/revel/revel"
@@ -344,24 +345,22 @@ func (p Publications) GetFileWithPublicationList() revel.Result {
 	}
 	defer file.Close()
 
-	writer := p.Response.GetWriter()
-	httpWriter := writer.(http.ResponseWriter)
-
 	array := strings.Split(filename, "/")
 	name := array[len(array)-1]
 	fmt.Println(name)
-	httpWriter.Header().Set("Content-Disposition", `attachment; filename="`+name+`"`)
-	httpWriter.Header().Set("Content-Type", "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
 
-	_, err = io.Copy(httpWriter, file)
+	fileData, err := io.ReadAll(file)
 	if err != nil {
-		return p.RenderJSON(map[string]string{"error": "Ошибка при отправке файла"})
+		return p.RenderJSON(map[string]string{"error": "Ошибка при чтении файла"})
 	}
+	reader := bytes.NewReader(fileData)
 
 	go func() {
 		time.Sleep(2 * time.Second)
 		_ = os.Remove(filename)
 	}()
 
-	return nil
+	modTime := time.Now()
+
+	return p.RenderBinary(reader, name, revel.Attachment, modTime)
 }

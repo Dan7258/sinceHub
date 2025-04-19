@@ -14,16 +14,13 @@ type Middleware struct {
 	*revel.Controller
 }
 
-var secretKey []byte
-
-func Init() {
+func InitENV() {
 	err := godotenv.Load(".env")
 	if err != nil {
 		revel.AppLog.Error("SECRET_KEY environment variable not set")
 		return
 	}
-	secretKey = []byte(os.Getenv("SECRET_KEY"))
-	if len(secretKey) == 0 {
+	if len([]byte(os.Getenv("SECRET_KEY"))) == 0 {
 		revel.AppLog.Error("SECRET_KEY environment variable not set")
 		return
 	}
@@ -35,7 +32,7 @@ func GenerateJWT(userID uint64) (string, error) {
 	claims["sub"] = userID
 	claims["exp"] = time.Now().Add(time.Hour * 72).Unix()
 
-	tokenString, err := token.SignedString(secretKey)
+	tokenString, err := token.SignedString([]byte(os.Getenv("SECRET_KEY")))
 
 	if err != nil {
 		fmt.Errorf("Something Went Wrong: %s", err.Error())
@@ -55,7 +52,7 @@ func ValidateJWT(request *revel.Request, cookieName string) (uint64, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("There was an error in parsing the token")
 		}
-		return secretKey, nil
+		return []byte(os.Getenv("SECRET_KEY")), nil
 	})
 	if err != nil {
 		return 0, err
@@ -65,6 +62,47 @@ func ValidateJWT(request *revel.Request, cookieName string) (uint64, error) {
 
 	if time.Until(time.Unix(int64(exp), 0)) < time.Minute*30 {
 		GenerateJWT(userID)
+	}
+
+	return userID, nil
+}
+
+func GenerateAdminJWT(userID uint64) (string, error) {
+	token := jwt.New(jwt.SigningMethodHS256)
+	claims := token.Claims.(jwt.MapClaims)
+	claims["sub"] = userID
+	claims["exp"] = time.Now().Add(time.Hour * 24).Unix()
+
+	tokenString, err := token.SignedString([]byte(os.Getenv("SECRET_KEY_ADMIN")))
+
+	if err != nil {
+		fmt.Errorf("Something Went Wrong: %s", err.Error())
+		return "", err
+	}
+
+	return tokenString, nil
+
+}
+
+func ValidateAdminJWT(request *revel.Request, cookieName string) (uint64, error) {
+	cookie, err := request.Cookie(cookieName)
+	if err != nil {
+		return 0, err
+	}
+	token, err := jwt.Parse(cookie.GetValue(), func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("There was an error in parsing the token")
+		}
+		return []byte(os.Getenv("SECRET_KEY_ADMIN")), nil
+	})
+	if err != nil {
+		return 0, err
+	}
+	exp := token.Claims.(jwt.MapClaims)["exp"].(float64)
+	userID := uint64(token.Claims.(jwt.MapClaims)["sub"].(float64))
+
+	if time.Until(time.Unix(int64(exp), 0)) < time.Minute*30 {
+		GenerateAdminJWT(userID)
 	}
 
 	return userID, nil

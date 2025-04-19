@@ -16,7 +16,7 @@ func (c App) Index() revel.Result {
 }
 
 func init() {
-	revel.OnAppStart(middleware.Init)
+	revel.OnAppStart(middleware.InitENV)
 	revel.OnAppStart(models.InitDB)
 	revel.OnAppStart(smtp.InitSMTP)
 	revel.OnAppStart(InitLicense)
