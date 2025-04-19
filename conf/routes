@@ -10,9 +10,9 @@ GET     /tags/name/:name                        Tags.GetTagByName
 GET     /tags                                   Tags.GetAllTags
 POST    /tags                                   Tags.CreateTag
 POST    /tags/:id/publications                  Tags.AddPublicationsToTag
-DELETE  /tags/id/:id                            Tags.DeleteTagByID
+DELETE  /tags/name/:name                        Tags.DeleteTagByName
 DELETE  /tags/:id/publications                  Tags.DeletePublicationsFromTag
-PATCH   /tags/id/:id                            Tags.UpdateTagByID
+PATCH   /tags/name/:name                        Tags.UpdateTagByName
 
 GET     /                                       Publications.ShowPublications
 GET     /getPublicationsData                    Publications.GetPublicationsData

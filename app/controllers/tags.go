@@ -4,6 +4,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/revel/revel"
 	"net/http"
+	"scinceHub/app/middleware"
 	"scinceHub/app/models"
 )
 
@@ -12,8 +13,13 @@ type Tags struct {
 }
 
 func (t Tags) CreateTag() revel.Result {
+	_, err := middleware.ValidateAdminJWT(t.Request, "auth_token_admin")
+	if err != nil {
+		//p.Response.Status = http.StatusUnauthorized
+		return t.Redirect("/login-admin")
+	}
 	tag := new(models.Tags)
-	err := t.Params.BindJSON(&tag)
+	err = t.Params.BindJSON(&tag)
 	if err != nil {
 		t.Response.Status = http.StatusBadRequest
 		return t.RenderJSON(map[string]string{"error": err.Error()})
@@ -58,8 +64,13 @@ func (t Tags) GetTagByName(name string) revel.Result {
 	return t.RenderJSON(tag)
 }
 
-func (t Tags) DeleteTagByID(id int) revel.Result {
-	err := models.DeleteTagByID(id)
+func (t Tags) DeleteTagByName(name string) revel.Result {
+	_, err := middleware.ValidateAdminJWT(t.Request, "auth_token_admin")
+	if err != nil {
+		//p.Response.Status = http.StatusUnauthorized
+		return t.Redirect("/login-admin")
+	}
+	err = models.DeleteTagByName(name)
 	if err != nil {
 		t.Response.Status = http.StatusInternalServerError
 		return t.RenderJSON(map[string]string{"error": err.Error()})
@@ -68,9 +79,14 @@ func (t Tags) DeleteTagByID(id int) revel.Result {
 	return t.RenderJSON(map[string]int{"status": http.StatusNoContent})
 }
 
-func (t Tags) UpdateTagByID(id int) revel.Result {
+func (t Tags) UpdateTagByName(name string) revel.Result {
+	_, err := middleware.ValidateAdminJWT(t.Request, "auth_token_admin")
+	if err != nil {
+		//p.Response.Status = http.StatusUnauthorized
+		return t.Redirect("/login-admin")
+	}
 	tag := new(models.Tags)
-	err := t.Params.BindJSON(&tag)
+	err = t.Params.BindJSON(&tag)
 	if err != nil {
 		t.Response.Status = http.StatusBadRequest
 		return t.RenderJSON(map[string]string{"error": err.Error()})
@@ -83,7 +99,7 @@ func (t Tags) UpdateTagByID(id int) revel.Result {
 		return t.RenderJSON(map[string]string{"error": err.Error()})
 	}
 
-	err = models.UpdateTagByID(id, tag)
+	err = models.UpdateTagByID(name, tag)
 
 	if err != nil {
 		t.Response.Status = http.StatusInternalServerError

@@ -38,26 +38,26 @@ func GetTagByName(name string) (*Tags, error) {
 	return tag, nil
 }
 
-func DeleteTagByID(ID int) error {
+func DeleteTagByName(name string) error {
 	tag := new(Tags)
-	result := DB.Delete(tag, ID)
+	result := DB.Where("name = ?", name).Delete(tag)
 	if result.Error != nil {
 		return result.Error
 	}
 	if result.RowsAffected == 0 {
-		return fmt.Errorf("Тег с ID %d не найден", ID)
+		return fmt.Errorf("Тег с name %s не найден", name)
 	}
 	return nil
 }
 
-func UpdateTagByID(ID int, updTag *Tags) error {
+func UpdateTagByID(name string, updTag *Tags) error {
 	tag := new(Tags)
-	result := DB.Preload("Publications").Model(tag).Where("id = ?", ID).Update("name", updTag.Name)
+	result := DB.Preload("Publications").Model(tag).Where("name = ?", name).Update("name", updTag.Name)
 	if result.Error != nil {
 		return result.Error
 	}
 	if result.RowsAffected == 0 {
-		return fmt.Errorf("Тег с ID %d не найден", ID)
+		return fmt.Errorf("Тег с name %s не найден", name)
 	}
 	return nil
 }
