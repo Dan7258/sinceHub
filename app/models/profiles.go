@@ -127,18 +127,22 @@ func DeleteProfileByID(ID uint64) error {
 	profile := new(Profiles)
 	err := DB.Model(new(Subscribs)).Where("profiles_id = ? OR subscribers_id = ?", ID, ID).Delete(new(Subscribs)).Error
 	if err != nil {
+		fmt.Println("aaa")
 		return err
 	}
 	err = DB.Model(new(Publications)).Where("owner_id = ?", ID).Delete(new(Publications)).Error
 	if err != nil {
+		fmt.Println("bbb")
 		return err
 	}
 	result := DB.Delete(profile, ID)
 	if result.Error != nil {
+		fmt.Println("cccc")
 		return result.Error
 	}
 	err = RemoveFilesByUseID(ID)
 	if err != nil {
+		fmt.Println("ddddd")
 		return err
 	}
 	if result.RowsAffected == 0 {

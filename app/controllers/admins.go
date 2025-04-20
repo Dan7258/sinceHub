@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"scinceHub/app/middleware"
 	"scinceHub/app/models"
-	"time"
 )
 
 type Admins struct {
@@ -30,31 +29,13 @@ func (a Admins) LoginAdmin(login, password string) revel.Result {
 		a.Response.Status = http.StatusInternalServerError
 		return a.RenderText("Ошибка генерации токена")
 	}
-	cookie := &http.Cookie{
-		Name:     "auth_token_admin",
-		Value:    token,
-		Path:     "/",
-		HttpOnly: true,
-		Secure:   true,
-		SameSite: http.SameSiteStrictMode,
-	}
-	a.SetCookie(cookie)
+	middleware.SetCookieData(a.Controller, "auth_token_admin", token, false)
 
 	a.Response.Status = http.StatusFound
 	return a.Redirect("/admin")
 }
 
 func (a Admins) LogoutAdmin() revel.Result {
-	cookie := &http.Cookie{
-		Name:     "auth_token_admin",
-		Value:    "",
-		Path:     "/",
-		MaxAge:   -1,
-		Expires:  time.Unix(0, 0),
-		HttpOnly: true,
-		Secure:   true,
-		SameSite: http.SameSiteStrictMode,
-	}
-	a.SetCookie(cookie)
+	middleware.SetCookieData(a.Controller, "auth_token_admin", "", true)
 	return a.Redirect("/")
 }

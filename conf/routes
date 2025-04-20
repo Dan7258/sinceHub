@@ -60,6 +60,9 @@ GET     /login-admin                                Admins.ShowLoginAdminPage
 POST    /login-admin                                Admins.LoginAdmin
 GET     /logout-admin                               Admins.LogoutAdmin
 
+GET     /callback-ya                                OpenID.ShowCallbackYAPage
+POST    /token-ya                                   OpenID.GetCodeForYAToken
+
 # Ignore favicon requests
 GET     /favicon.ico                            404
 

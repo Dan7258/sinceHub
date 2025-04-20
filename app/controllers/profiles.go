@@ -380,32 +380,14 @@ func (p Profiles) Login(login, password string) revel.Result {
 		p.Response.Status = http.StatusInternalServerError
 		return p.RenderText("Ошибка генерации токена")
 	}
-	cookie := &http.Cookie{
-		Name:     "auth_token",
-		Value:    token,
-		Path:     "/",
-		HttpOnly: true,
-		Secure:   true,
-		SameSite: http.SameSiteStrictMode,
-	}
-	p.SetCookie(cookie)
+	middleware.SetCookieData(p.Controller, "auth_token", token, false)
 
 	p.Response.Status = http.StatusFound
 	return p.Redirect("/profile")
 }
 
 func (p Profiles) Logout() revel.Result {
-	cookie := &http.Cookie{
-		Name:     "auth_token",
-		Value:    "",
-		Path:     "/",
-		MaxAge:   -1,
-		Expires:  time.Unix(0, 0),
-		HttpOnly: true,
-		Secure:   true,
-		SameSite: http.SameSiteStrictMode,
-	}
-	p.SetCookie(cookie)
+	middleware.SetCookieData(p.Controller, "auth_token", "", true)
 	return p.Redirect("/login")
 }
 
@@ -451,17 +433,27 @@ func (p Profiles) GetUsersDataForCreatePublication() revel.Result {
 }
 
 func (p Profiles) DeleteProfileByID(id uint64) revel.Result {
-	err := models.DeleteProfileByID(id)
+	_, err := middleware.ValidateJWT(p.Request, "auth_token")
+	if err != nil {
+		p.Response.Status = http.StatusUnauthorized
+		return p.Redirect("/login")
+	}
+	err = models.DeleteProfileByID(id)
 	if err != nil {
 		p.Response.Status = http.StatusInternalServerError
 		return p.RenderJSON(map[string]string{"error": err.Error()})
 	}
-	p.Response.Status = http.StatusNoContent
+	middleware.SetCookieData(p.Controller, "auth_token", "", true)
 	return p.RenderJSON(map[string]int{"status": http.StatusNoContent})
 }
 
 func (p Profiles) DeleteProfileByLogin(login string) revel.Result {
-	err := models.DeleteProfileByLogin(login)
+	_, err := middleware.ValidateJWT(p.Request, "auth_token")
+	if err != nil {
+		p.Response.Status = http.StatusUnauthorized
+		return p.Redirect("/login")
+	}
+	err = models.DeleteProfileByLogin(login)
 	if err != nil {
 		p.Response.Status = http.StatusInternalServerError
 		return p.RenderJSON(map[string]string{"error": err.Error()})

@@ -167,16 +167,13 @@
 <script>
     // Инициализация кнопки входа через Яндекс
     window.onload = function () {
-        const oauthQueryParams = {
-            client_id: 'YOUR_YANDEX_CLIENT_ID', // Замените на ваш client_id от Яндекс
-            response_type: 'token',
-            redirect_uri: 'YOUR_REDIRECT_URI' // Замените на ваш redirect_uri
-        };
-        const tokenPageOrigin = 'YOUR_REDIRECT_URI'; // Замените на ваш redirect_uri
-
         window.YaAuthSuggest.init(
-            oauthQueryParams,
-            tokenPageOrigin,
+            {
+                client_id: "f4a7ab213914437080db918778a0705d",
+                response_type: "token",
+                redirect_uri: "http://localhost:9000/callback-ya"
+            },
+            "http://localhost",
             {
                 view: "button",
                 parentId: "buttonContainerId",
@@ -198,37 +195,15 @@
                 showError('Ошибка при входе через Яндекс');
             });
     };
-
-    // Функция для отправки токена на сервер
-    async function handleYandexLogin(token) {
-        const errorElement = document.getElementById('error-message');
-        errorElement.style.display = 'none';
-        errorElement.textContent = '';
-
-        try {
-            const response = await fetch('/yandex-login', { // Предполагаемый эндпоинт на сервере
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ access_token: token })
-            });
-
-            if (response.redirected) {
-                window.location.href = response.url;
-            } else if (response.status === 401) {
-                showError('Ошибка авторизации через Яндекс');
-            } else if (response.status === 500) {
-                showError('Ошибка сервера. Пожалуйста, попробуйте позже');
-            } else {
-                const result = await response.text();
-                showError(result || 'Произошла неизвестная ошибка');
-            }
-        } catch (error) {
-            console.error('Ошибка:', error);
-            showError('Произошла ошибка при подключении к серверу');
+    // Слушатель сообщений от callback_ya.html
+    window.addEventListener('message', function(event) {
+        if (event.origin !== 'http://localhost:9000') return; // Проверяем источник
+        if (event.data.type === 'yandex_auth_success') {
+            // Перенаправляем на /profile
+            window.location.href = '/profile';
         }
-    }
+    });
+
 
     // Функции для работы меню
     function toggleMenu() {

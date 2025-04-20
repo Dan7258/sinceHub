@@ -6,13 +6,10 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/revel/revel"
 	"golang.org/x/crypto/bcrypt"
+	"net/http"
 	"os"
 	"time"
 )
-
-type Middleware struct {
-	*revel.Controller
-}
 
 func InitENV() {
 	err := godotenv.Load(".env")
@@ -106,6 +103,22 @@ func ValidateAdminJWT(request *revel.Request, cookieName string) (uint64, error)
 	}
 
 	return userID, nil
+}
+
+func SetCookieData(ctrl *revel.Controller, cookieName, cookieValue string, remove bool) {
+	cookie := &http.Cookie{}
+	cookie.Name = cookieName
+	cookie.Value = cookieValue
+	cookie.Path = "/"
+	cookie.HttpOnly = true
+	cookie.Secure = true
+	cookie.SameSite = http.SameSiteStrictMode
+
+	if remove {
+		cookie.Expires = time.Unix(0, 0)
+		cookie.MaxAge = -1
+	}
+	ctrl.SetCookie(cookie)
 }
 
 func HashPassword(password string) (string, error) {

@@ -14,6 +14,9 @@ func (a Admins) ShowLoginAdminPage() revel.Result {
 func (p Profiles) ShowRegisterPage() revel.Result {
 	return p.RenderTemplate("register.html")
 }
+func (o OpenID) ShowCallbackYAPage() revel.Result {
+	return o.RenderTemplate("callback_ya.html")
+}
 
 func (p Profiles) ShowSettingsPage() revel.Result {
 	_, err := middleware.ValidateJWT(p.Request, "auth_token")
