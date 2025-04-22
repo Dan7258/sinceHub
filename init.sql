@@ -1,27 +1,30 @@
 CREATE TABLE profiles (
     id SERIAL PRIMARY KEY,
-    login VARCHAR(1000) UNIQUE NOT NULL,
-    password VARCHAR(1000) NOT NULL,
-    first_Name VARCHAR(1000) NOT NULL,
-    last_name VARCHAR(1000) NOT NULL,
-    middle_name VARCHAR(1000),
+    login VARCHAR(255) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    first_Name VARCHAR(255) NOT NULL,
+    last_name VARCHAR(255) NOT NULL,
+    middle_name VARCHAR(255),
     country VARCHAR(100),
-    academic_degree VARCHAR(1000),
-    VAC VARCHAR(1000),
-    appointment VARCHAR(1000)
+    academic_degree VARCHAR(255),
+    VAC VARCHAR(255),
+    appointment VARCHAR(255)
 );
 
 CREATE TABLE admins (
     id SERIAL PRIMARY KEY,
     login VARCHAR(255) UNIQUE NOT NULL,
-    password VARCHAR(255) NOT NULL,
+    password VARCHAR(255) NOT NULL
 );
+
+INSERT INTO admins (login, password)
+VALUES ('admin', '$2a$10$4MJWcLMLTCoSBm9TZhmMAugp76gUU5zEuhA6T3IAfww3ZB.U2P/mO');
 
 CREATE TABLE publications (
     id SERIAL PRIMARY KEY,
-    title VARCHAR(1000) NOT NULL,
-    abstract VARCHAR(1000) NOT NULL,
-    file_link VARCHAR(1000) NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    abstract VARCHAR(255) NOT NULL,
+    file_link VARCHAR(255) NOT NULL,
     created_at DATE NOT NULL,
     updated_at DATE NOT NULL,
     owner_id INTEGER NOT NULL REFERENCES profiles(id)
@@ -29,7 +32,7 @@ CREATE TABLE publications (
 
 CREATE TABLE tags (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(1000) UNIQUE NOT NULL
+    name VARCHAR(255) UNIQUE NOT NULL
 );
 
 CREATE TABLE friend_requests (
@@ -57,3 +60,4 @@ CREATE TABLE subscribs (
     subscribers_id INTEGER REFERENCES Profiles(id),
     PRIMARY KEY (profiles_id, subscribers_id)
 );
+

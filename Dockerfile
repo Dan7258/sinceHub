@@ -1,3 +1,4 @@
+FROM golang:1.21.0 as preparer
 # Стадия сборки
 FROM golang:1.21.0 AS builder
 
