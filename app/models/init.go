@@ -1,7 +1,11 @@
 package models
 
 import (
+	"context"
 	"fmt"
+	"github.com/redis/go-redis/v9"
+	"time"
+
 	"os"
 
 	"gorm.io/driver/postgres"
@@ -9,6 +13,7 @@ import (
 )
 
 var DB *gorm.DB
+var RDB *redis.Client
 
 func InitDB() {
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s",
@@ -38,4 +43,19 @@ func InitDB() {
 	for _, table := range tables {
 		fmt.Println("-", table)
 	}
+}
+
+func InitRDB() {
+	RDB = redis.NewClient(&redis.Options{
+		Addr:     os.Getenv("REDIS_HOST"),
+		Password: os.Getenv("REDIS_PASSWORD"),
+		DB:       0,
+	})
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	pong, err := RDB.Ping(ctx).Result()
+	if err != nil {
+		fmt.Println("Error pinging redis:", err)
+	}
+	fmt.Printf("Revel connected: %s\n", pong)
 }

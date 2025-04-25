@@ -82,6 +82,10 @@ func UpdatePublication(pub *Publications, tagIDs []uint64, coauthorIDs []uint64)
 	if result.Error != nil {
 		return result.Error
 	}
+
+	for _, coauthorID := range coauthorIDs {
+		DeleteDataFromRedis(fmt.Sprintf("%d", coauthorID))
+	}
 	return nil
 }
 

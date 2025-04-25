@@ -1,10 +1,13 @@
 package models
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
 	"gorm.io/gorm"
 	"os"
 	"strings"
+	"time"
 )
 
 type Profiles struct {
@@ -71,6 +74,13 @@ func ThsProfilesIsExist(login string) bool {
 
 func GetUserProfile(ID uint64) (*Profiles, error) {
 	profile := new(Profiles)
+	data, err := GetDataFromRedis(fmt.Sprintf("%d", ID))
+	if data != nil && err == nil {
+		json.Unmarshal(data, profile)
+		fmt.Println("Данные профиля получили с redis")
+		return profile, nil
+	}
+
 	result := DB.Preload("Publications", func(db *gorm.DB) *gorm.DB {
 		return db.Order("created_at desc")
 	}).
@@ -88,6 +98,11 @@ func GetUserProfile(ID uint64) (*Profiles, error) {
 	if result.Error != nil {
 		return nil, result.Error
 	}
+	data, err = json.Marshal(profile)
+	if err != nil {
+		fmt.Errorf("Данные не закодировались в json")
+	}
+	SetDataInRedis(fmt.Sprintf("%d", ID), data, time.Hour)
 	return profile, nil
 }
 
@@ -187,6 +202,9 @@ func UpdateProfileByID(ID uint64, updProfile *Profiles) error {
 	if result.RowsAffected == 0 {
 		return fmt.Errorf("Профиль с ID %d не найден", ID)
 	}
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	RDB.Del(ctx, fmt.Sprintf("%d", ID))
 	return nil
 }
 
