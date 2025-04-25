@@ -3,4 +3,8 @@ tmp/
 routes/
 *.idea/
 .env
-public/uploads/*.pdf
+public/uploads/*.pdfпше
+
+.exe
+
+.conf
