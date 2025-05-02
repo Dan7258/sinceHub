@@ -8,12 +8,9 @@ services:
       - "9000:9000"
     depends_on:
       - db
-    environment:
-      DB_HOST: db
-      DB_PORT: 5432
-      DB_NAME: scinceHubDB
-      DB_USER: admin
-      DB_PASSWORD: admin
+      - redis
+    env_file:
+      - .env
   db:
     image: postgres:latest
     container_name: postgres_container

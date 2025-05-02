@@ -2,14 +2,13 @@ package models
 
 import (
 	"context"
-	"fmt"
 	"time"
 )
 
 func SetDataInRedis(key string, value []byte, timeLive time.Duration) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	err := RDB.Set(ctx, fmt.Sprintf("%d", key), value, timeLive).Err()
+	err := RDB.Set(ctx, key, value, timeLive).Err()
 	if err != nil {
 		return err
 	}

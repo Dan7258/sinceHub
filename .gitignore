@@ -7,4 +7,4 @@ public/uploads/*.pdf
 
 .exe
 
-.conf
+redis.conf

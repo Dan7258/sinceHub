@@ -1,12 +1,10 @@
 package controllers
 
 import (
-	"crypto/rand"
 	"fmt"
 	"github.com/go-playground/validator/v10"
 	"github.com/revel/revel"
 	"golang.org/x/crypto/bcrypt"
-	"math/big"
 	"net/http"
 	"scinceHub/app/middleware"
 	"scinceHub/app/models"
@@ -16,16 +14,6 @@ import (
 
 type Profiles struct {
 	*revel.Controller
-}
-
-func (p Profiles) GenerateRandomNumber() (*big.Int, error) {
-	max := big.NewInt(100000)
-	randomNumber, err := rand.Int(rand.Reader, max)
-	if err != nil {
-		fmt.Println("Ошибка при генерации случайного числа:", err)
-		return nil, err
-	}
-	return randomNumber, nil
 }
 
 func (p Profiles) SendVerificationCodeForRegister() revel.Result {
@@ -47,14 +35,7 @@ func (p Profiles) SendVerificationCodeForRegister() revel.Result {
 	}
 
 	verificationCode := fmt.Sprintf("%06d", randomNumber)
-
-	err = models.SetDataInRedis(profile.Login, []byte(verificationCode), 5*time.Minute)
-	if err != nil {
-		models.VerificationEmailCodes[profile.Login] = models.VerificationEmail{
-			Code:      verificationCode,
-			ExpiresAt: time.Now().UTC().Add(5 * time.Minute),
-		}
-	}
+	SetVerifyCode(profile.Login, verificationCode, 5*time.Minute, emailCode)
 
 	err = smtp.SendMessage(profile.Login, "Подтверждение почты", verificationCode)
 	if err != nil {
@@ -99,8 +80,8 @@ func (p Profiles) SendVerificationCodeForChangeEmail() revel.Result {
 	verificationCode := fmt.Sprintf("%06d", randomNumber)
 
 	models.ChangeEmailCodes[userID] = models.ChangeEmail{
-		Code:      verificationCode,
-		ExpiresAt: time.Now().Add(15 * time.Minute),
+		Code:     verificationCode,
+		TimeLife: time.Now().Add(15 * time.Minute),
 	}
 
 	err = smtp.SendMessage(profile.Login, "Смена почты", verificationCode)
@@ -137,7 +118,7 @@ func (p Profiles) VerifyAndChangeEmail() revel.Result {
 		p.Response.Status = http.StatusNotFound
 		return p.RenderJSON(map[string]string{"error": "Код подтверждения не найден. Пожалуйста, запросите новый код."})
 	}
-	if time.Now().After(changeEmail.ExpiresAt) {
+	if time.Now().After(changeEmail.TimeLife) {
 		delete(models.ChangeEmailCodes, userID)
 		p.Response.Status = http.StatusUnauthorized
 		return p.RenderJSON(map[string]string{"error": "Срок действия кода истек. Пожалуйста, запросите новый код."})
@@ -204,8 +185,8 @@ func (p Profiles) SendVerificationCodeForChangePassword() revel.Result {
 	verificationCode := fmt.Sprintf("%06d", randomNumber)
 
 	models.ChangePasswordCodes[userID] = models.ChangePassword{
-		Code:      verificationCode,
-		ExpiresAt: time.Now().Add(15 * time.Minute),
+		Code:     verificationCode,
+		TimeLife: time.Now().Add(15 * time.Minute),
 	}
 
 	err = smtp.SendMessage(profile.Login, "Смена пароля", verificationCode)
@@ -242,7 +223,7 @@ func (p Profiles) VerifyAndChangePassword() revel.Result {
 		p.Response.Status = http.StatusNotFound
 		return p.RenderJSON(map[string]string{"error": "Код подтверждения не найден. Пожалуйста, запросите новый код."})
 	}
-	if time.Now().After(changePassword.ExpiresAt) {
+	if time.Now().After(changePassword.TimeLife) {
 		delete(models.ChangePasswordCodes, userID)
 		p.Response.Status = http.StatusUnauthorized
 		return p.RenderJSON(map[string]string{"error": "Срок действия кода истек. Пожалуйста, запросите новый код."})
@@ -306,22 +287,17 @@ func (p Profiles) VerifyAndCreateUser() revel.Result {
 		revel.AppLog.Error(err.Error())
 		return p.RenderJSON(map[string]string{"error": err.Error()})
 	}
-	VerificationEmail, ok := models.VerificationEmailCodes[vprofile.Profile.Login]
+	VerificationEmailCode, ok := GetVerificationEmailCode(vprofile.Profile.Login)
 	if !ok {
 		p.Response.Status = http.StatusNotFound
-		return p.RenderJSON(map[string]string{"error": "Код подтверждения не найден. Пожалуйста, запросите новый код."})
-	}
-	if time.Now().After(VerificationEmail.ExpiresAt) {
-		delete(models.VerificationEmailCodes, vprofile.Profile.Login)
-		p.Response.Status = http.StatusUnauthorized
-		return p.RenderJSON(map[string]string{"error": "Срок действия кода истек. Пожалуйста, запросите новый код."})
+		return p.RenderJSON(map[string]string{"error": "Код подтверждения не найден или не действителен. Пожалуйста, запросите новый код."})
 	}
 
-	if VerificationEmail.Code != vprofile.Code {
+	if VerificationEmailCode != vprofile.Code {
 		p.Response.Status = http.StatusUnauthorized
 		return p.RenderJSON(map[string]string{"error": "Неверный код подтверждения"})
 	}
-	delete(models.VerificationEmailCodes, vprofile.Profile.Login)
+
 	hashPassword, err := middleware.HashPassword(vprofile.Profile.Password)
 	if err != nil {
 		p.Response.Status = http.StatusInternalServerError

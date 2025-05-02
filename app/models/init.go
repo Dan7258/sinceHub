@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/redis/go-redis/v9"
+	"github.com/revel/revel"
 	"time"
 
 	"os"
@@ -55,7 +56,7 @@ func InitRDB() {
 	defer cancel()
 	pong, err := RDB.Ping(ctx).Result()
 	if err != nil {
-		fmt.Println("Error pinging redis:", err)
+		revel.AppLog.Panic("Error pinging redis:" + err.Error())
 	}
-	fmt.Printf("Revel connected: %s\n", pong)
+	revel.AppLog.Info("Revel connected: " + pong)
 }
