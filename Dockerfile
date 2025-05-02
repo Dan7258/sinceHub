@@ -1,34 +1,28 @@
-FROM golang:1.21.0 as preparer
-# Стадия сборки
 FROM golang:1.21.0 AS builder
 
 WORKDIR /app
 
-# Копируем go.mod и go.sum
+RUN go install github.com/revel/cmd/revel@latest
+
 COPY go.mod go.sum ./
 RUN go mod download
 
-# Копируем весь код
 COPY . .
 
-# Устанавливаем Revel CLI
-RUN go install github.com/revel/cmd/revel@latest
 
-# Собираем приложение (если нужно, убери, если используешь revel run)
-# RUN revel build -a . -t /app/target
-
-# Финальная стадия
-FROM golang:1.21.0
+FROM debian:bookworm-slim
 
 WORKDIR /app
 
-# Устанавливаем Revel CLI
-RUN go install github.com/revel/cmd/revel@latest
+RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/*
 
-# Копируем код из builder
+COPY --from=builder /usr/local/go /usr/local/go
+ENV PATH="/usr/local/go/bin:${PATH}"
+
+COPY --from=builder /go/bin/revel /usr/local/bin/revel
+
 COPY --from=builder /app /app
 
 EXPOSE 9000
 
-# Запускаем приложение
-CMD ["revel", "run", "-a", "."]
+CMD ["revel", "run", "."]

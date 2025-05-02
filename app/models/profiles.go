@@ -37,9 +37,6 @@ func CreateProfile(profile *Profiles) error {
 	if result.Error != nil {
 		return result.Error
 	}
-	if result.Error != nil {
-		return result.Error
-	}
 	return nil
 }
 

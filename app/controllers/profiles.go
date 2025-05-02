@@ -18,32 +18,6 @@ type Profiles struct {
 	*revel.Controller
 }
 
-type VerificationEmail struct {
-	Code      string
-	ExpiresAt time.Time
-}
-
-type ChangeEmail struct {
-	Code      string
-	ExpiresAt time.Time
-}
-
-type ChangePassword struct {
-	Code      string
-	ExpiresAt time.Time
-}
-
-type VerifyProfile struct {
-	Profile models.Profiles
-	Code    string `json:"code"`
-}
-
-var verificationEmailCodes = make(map[string]VerificationEmail)
-
-var changeEmailCodes = make(map[uint64]ChangeEmail)
-
-var changePasswordCodes = make(map[uint64]ChangePassword)
-
 func (p Profiles) GenerateRandomNumber() (*big.Int, error) {
 	max := big.NewInt(100000)
 	randomNumber, err := rand.Int(rand.Reader, max)
@@ -74,9 +48,12 @@ func (p Profiles) SendVerificationCodeForRegister() revel.Result {
 
 	verificationCode := fmt.Sprintf("%06d", randomNumber)
 
-	verificationEmailCodes[profile.Login] = VerificationEmail{
-		Code:      verificationCode,
-		ExpiresAt: time.Now().Add(15 * time.Minute),
+	err = models.SetDataInRedis(profile.Login, []byte(verificationCode), 5*time.Minute)
+	if err != nil {
+		models.VerificationEmailCodes[profile.Login] = models.VerificationEmail{
+			Code:      verificationCode,
+			ExpiresAt: time.Now().UTC().Add(5 * time.Minute),
+		}
 	}
 
 	err = smtp.SendMessage(profile.Login, "Подтверждение почты", verificationCode)
@@ -103,7 +80,7 @@ func (p Profiles) SendVerificationCodeForChangeEmail() revel.Result {
 		return p.RenderJSON(map[string]string{"error": err.Error()})
 	}
 
-	if _, ok := changePasswordCodes[userID]; ok {
+	if _, ok := models.ChangePasswordCodes[userID]; ok {
 		p.Response.Status = http.StatusConflict
 		return p.RenderJSON(map[string]string{"error": "Завершите смену пароля!"})
 	}
@@ -121,7 +98,7 @@ func (p Profiles) SendVerificationCodeForChangeEmail() revel.Result {
 
 	verificationCode := fmt.Sprintf("%06d", randomNumber)
 
-	changeEmailCodes[userID] = ChangeEmail{
+	models.ChangeEmailCodes[userID] = models.ChangeEmail{
 		Code:      verificationCode,
 		ExpiresAt: time.Now().Add(15 * time.Minute),
 	}
@@ -142,7 +119,7 @@ func (p Profiles) VerifyAndChangeEmail() revel.Result {
 		//p.Response.Status = http.StatusUnauthorized
 		return p.Redirect("/login")
 	}
-	var vprofile = new(VerifyProfile)
+	var vprofile = new(models.VerifyProfile)
 	err = p.Params.BindJSON(vprofile)
 	if err != nil {
 		p.Response.Status = http.StatusBadRequest
@@ -155,13 +132,13 @@ func (p Profiles) VerifyAndChangeEmail() revel.Result {
 		revel.AppLog.Error(err.Error())
 		return p.RenderJSON(map[string]string{"error": err.Error()})
 	}
-	changeEmail, ok := changeEmailCodes[userID]
+	changeEmail, ok := models.ChangeEmailCodes[userID]
 	if !ok {
 		p.Response.Status = http.StatusNotFound
 		return p.RenderJSON(map[string]string{"error": "Код подтверждения не найден. Пожалуйста, запросите новый код."})
 	}
 	if time.Now().After(changeEmail.ExpiresAt) {
-		delete(changeEmailCodes, userID)
+		delete(models.ChangeEmailCodes, userID)
 		p.Response.Status = http.StatusUnauthorized
 		return p.RenderJSON(map[string]string{"error": "Срок действия кода истек. Пожалуйста, запросите новый код."})
 	}
@@ -169,7 +146,7 @@ func (p Profiles) VerifyAndChangeEmail() revel.Result {
 		p.Response.Status = http.StatusUnauthorized
 		return p.RenderJSON(map[string]string{"error": "Неверный код подтверждения"})
 	}
-	delete(changeEmailCodes, userID)
+	delete(models.ChangeEmailCodes, userID)
 
 	err = models.UpdateProfileByID(userID, &vprofile.Profile)
 	if err != nil {
@@ -187,7 +164,7 @@ func (p Profiles) StopChangeEmail() revel.Result {
 		//p.Response.Status = http.StatusUnauthorized
 		return p.Redirect("/login")
 	}
-	var vprofile = new(VerifyProfile)
+	var vprofile = new(models.VerifyProfile)
 	err = p.Params.BindJSON(vprofile)
 	if err != nil {
 		p.Response.Status = http.StatusBadRequest
@@ -200,7 +177,7 @@ func (p Profiles) StopChangeEmail() revel.Result {
 		revel.AppLog.Error(err.Error())
 		return p.RenderJSON(map[string]string{"error": err.Error()})
 	}
-	delete(changeEmailCodes, userID)
+	delete(models.ChangeEmailCodes, userID)
 	return p.Redirect("/settings")
 }
 
@@ -226,7 +203,7 @@ func (p Profiles) SendVerificationCodeForChangePassword() revel.Result {
 
 	verificationCode := fmt.Sprintf("%06d", randomNumber)
 
-	changePasswordCodes[userID] = ChangePassword{
+	models.ChangePasswordCodes[userID] = models.ChangePassword{
 		Code:      verificationCode,
 		ExpiresAt: time.Now().Add(15 * time.Minute),
 	}
@@ -247,7 +224,7 @@ func (p Profiles) VerifyAndChangePassword() revel.Result {
 		//p.Response.Status = http.StatusUnauthorized
 		return p.Redirect("/login")
 	}
-	var vprofile = new(VerifyProfile)
+	var vprofile = new(models.VerifyProfile)
 	err = p.Params.BindJSON(vprofile)
 	if err != nil {
 		p.Response.Status = http.StatusBadRequest
@@ -260,13 +237,13 @@ func (p Profiles) VerifyAndChangePassword() revel.Result {
 		revel.AppLog.Error(err.Error())
 		return p.RenderJSON(map[string]string{"error": err.Error()})
 	}
-	changePassword, ok := changePasswordCodes[userID]
+	changePassword, ok := models.ChangePasswordCodes[userID]
 	if !ok {
 		p.Response.Status = http.StatusNotFound
 		return p.RenderJSON(map[string]string{"error": "Код подтверждения не найден. Пожалуйста, запросите новый код."})
 	}
 	if time.Now().After(changePassword.ExpiresAt) {
-		delete(changePasswordCodes, userID)
+		delete(models.ChangePasswordCodes, userID)
 		p.Response.Status = http.StatusUnauthorized
 		return p.RenderJSON(map[string]string{"error": "Срок действия кода истек. Пожалуйста, запросите новый код."})
 	}
@@ -274,7 +251,7 @@ func (p Profiles) VerifyAndChangePassword() revel.Result {
 		p.Response.Status = http.StatusUnauthorized
 		return p.RenderJSON(map[string]string{"error": "Неверный код подтверждения"})
 	}
-	delete(changePasswordCodes, userID)
+	delete(models.ChangePasswordCodes, userID)
 	hashPassword, err := middleware.HashPassword(vprofile.Profile.Password)
 	if err != nil {
 		p.Response.Status = http.StatusInternalServerError
@@ -298,7 +275,7 @@ func (p Profiles) StopChangePassword() revel.Result {
 		//p.Response.Status = http.StatusUnauthorized
 		return p.Redirect("/login")
 	}
-	var vprofile = new(VerifyProfile)
+	var vprofile = new(models.VerifyProfile)
 	err = p.Params.BindJSON(vprofile)
 	if err != nil {
 		p.Response.Status = http.StatusBadRequest
@@ -311,12 +288,12 @@ func (p Profiles) StopChangePassword() revel.Result {
 		revel.AppLog.Error(err.Error())
 		return p.RenderJSON(map[string]string{"error": err.Error()})
 	}
-	delete(changePasswordCodes, userID)
+	delete(models.ChangePasswordCodes, userID)
 	return p.Redirect("/settings")
 }
 
 func (p Profiles) VerifyAndCreateUser() revel.Result {
-	var vprofile = new(VerifyProfile)
+	var vprofile = new(models.VerifyProfile)
 	err := p.Params.BindJSON(vprofile)
 	if err != nil {
 		p.Response.Status = http.StatusBadRequest
@@ -329,13 +306,13 @@ func (p Profiles) VerifyAndCreateUser() revel.Result {
 		revel.AppLog.Error(err.Error())
 		return p.RenderJSON(map[string]string{"error": err.Error()})
 	}
-	VerificationEmail, ok := verificationEmailCodes[vprofile.Profile.Login]
+	VerificationEmail, ok := models.VerificationEmailCodes[vprofile.Profile.Login]
 	if !ok {
 		p.Response.Status = http.StatusNotFound
 		return p.RenderJSON(map[string]string{"error": "Код подтверждения не найден. Пожалуйста, запросите новый код."})
 	}
 	if time.Now().After(VerificationEmail.ExpiresAt) {
-		delete(verificationEmailCodes, vprofile.Profile.Login)
+		delete(models.VerificationEmailCodes, vprofile.Profile.Login)
 		p.Response.Status = http.StatusUnauthorized
 		return p.RenderJSON(map[string]string{"error": "Срок действия кода истек. Пожалуйста, запросите новый код."})
 	}
@@ -344,7 +321,7 @@ func (p Profiles) VerifyAndCreateUser() revel.Result {
 		p.Response.Status = http.StatusUnauthorized
 		return p.RenderJSON(map[string]string{"error": "Неверный код подтверждения"})
 	}
-	delete(verificationEmailCodes, vprofile.Profile.Login)
+	delete(models.VerificationEmailCodes, vprofile.Profile.Login)
 	hashPassword, err := middleware.HashPassword(vprofile.Profile.Password)
 	if err != nil {
 		p.Response.Status = http.StatusInternalServerError

@@ -3,7 +3,7 @@ tmp/
 routes/
 *.idea/
 .env
-public/uploads/*.pdfпше
+public/uploads/*.pdf
 
 .exe
 
