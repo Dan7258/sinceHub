@@ -24,9 +24,9 @@ type VerifyProfile struct {
 
 var VerificationEmailCodes = make(map[string]VerificationEmail)
 
-var ChangeEmailCodes = make(map[uint64]ChangeEmail)
+var ChangeEmailCodes = make(map[string]ChangeEmail)
 
-var ChangePasswordCodes = make(map[uint64]ChangePassword)
+var ChangePasswordCodes = make(map[string]ChangePassword)
 
 func SetVerificationEmailCode(key, code string, timeLife time.Duration) {
 	VerificationEmailCodes[key] = VerificationEmail{
@@ -41,4 +41,46 @@ func GetVerificationEmailCode(key string) (string, bool) {
 		return "", false
 	}
 	return data.Code, ok
+}
+
+func DeleteVerificationEmailCode(key string) {
+	delete(VerificationEmailCodes, key)
+}
+
+func SetChangeEmailCode(key, code string, timeLife time.Duration) {
+	ChangeEmailCodes[key] = ChangeEmail{
+		Code:     code,
+		TimeLife: time.Now().UTC().Add(timeLife),
+	}
+}
+
+func GetChangeEmailCode(key string) (string, bool) {
+	data, ok := ChangeEmailCodes[key]
+	if !ok || time.Now().UTC().After(data.TimeLife) {
+		return "", false
+	}
+	return data.Code, ok
+}
+
+func DeleteChangeEmailCode(key string) {
+	delete(ChangeEmailCodes, key)
+}
+
+func SetChangePasswordCode(key, code string, timeLife time.Duration) {
+	ChangePasswordCodes[key] = ChangePassword{
+		Code:     code,
+		TimeLife: time.Now().UTC().Add(timeLife),
+	}
+}
+
+func GetChangePasswordCode(key string) (string, bool) {
+	data, ok := ChangePasswordCodes[key]
+	if !ok || time.Now().UTC().After(data.TimeLife) {
+		return "", false
+	}
+	return data.Code, ok
+}
+
+func DeleteChangePasswordCode(key string) {
+	delete(ChangePasswordCodes, key)
 }

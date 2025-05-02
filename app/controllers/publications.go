@@ -54,7 +54,7 @@ func (p Publications) CreatePublication() revel.Result {
 	}
 	defer file.Close()
 
-	randomNumber, _ := Profiles{}.GenerateRandomNumber()
+	randomNumber, _ := GenerateRandomNumber()
 	filePath := fmt.Sprintf("public/uploads/%d_%s_%s", userID, randomNumber, fileHeader[0].Filename)
 	dst, err := os.Create(filePath)
 	if err != nil {
@@ -215,7 +215,7 @@ func (p Publications) UpdatePublication() revel.Result {
 			return p.RenderJSON(map[string]string{"error": "Не удалось открыть файл"})
 		}
 		defer file.Close()
-		randomNumber, _ := Profiles{}.GenerateRandomNumber()
+		randomNumber, _ := GenerateRandomNumber()
 		filePath := fmt.Sprintf("public/uploads/%d_%s_%s", userID, randomNumber, fileHeader[0].Filename)
 		dst, err := os.Create(filePath)
 		if err != nil {

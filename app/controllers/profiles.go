@@ -28,14 +28,14 @@ func (p Profiles) SendVerificationCodeForRegister() revel.Result {
 		p.Response.Status = http.StatusConflict
 		return p.RenderJSON(map[string]string{"error": "Пользователь с таким email уже существует"})
 	}
-	randomNumber, err := p.GenerateRandomNumber()
+	randomNumber, err := GenerateRandomNumber()
 	if err != nil {
 		p.Response.Status = http.StatusInternalServerError
 		return p.RenderJSON(map[string]string{"error": "Не удалось сгенерировать код подтверждения"})
 	}
 
 	verificationCode := fmt.Sprintf("%06d", randomNumber)
-	SetVerifyCode(profile.Login, verificationCode, 5*time.Minute, emailCode)
+	SetVerificationEmailCode(profile.Login, verificationCode, 5*time.Minute)
 
 	err = smtp.SendMessage(profile.Login, "Подтверждение почты", verificationCode)
 	if err != nil {
@@ -50,9 +50,9 @@ func (p Profiles) SendVerificationCodeForRegister() revel.Result {
 func (p Profiles) SendVerificationCodeForChangeEmail() revel.Result {
 	userID, err := middleware.ValidateJWT(p.Request, "auth_token")
 	if err != nil {
-		//p.Response.Status = http.StatusUnauthorized
 		return p.Redirect("/login")
 	}
+	sUserID := fmt.Sprintf("%d", userID)
 	profile := new(models.Profiles)
 	err = p.Params.BindJSON(profile)
 	if err != nil {
@@ -60,8 +60,8 @@ func (p Profiles) SendVerificationCodeForChangeEmail() revel.Result {
 		revel.AppLog.Error(err.Error())
 		return p.RenderJSON(map[string]string{"error": err.Error()})
 	}
-
-	if _, ok := models.ChangePasswordCodes[userID]; ok {
+	_, ok := GetChangePasswordCode(sUserID)
+	if ok {
 		p.Response.Status = http.StatusConflict
 		return p.RenderJSON(map[string]string{"error": "Завершите смену пароля!"})
 	}
@@ -71,18 +71,14 @@ func (p Profiles) SendVerificationCodeForChangeEmail() revel.Result {
 		return p.RenderJSON(map[string]string{"error": "Пользователь с таким email уже существует"})
 	}
 
-	randomNumber, err := p.GenerateRandomNumber()
+	randomNumber, err := GenerateRandomNumber()
 	if err != nil {
 		p.Response.Status = http.StatusInternalServerError
 		return p.RenderJSON(map[string]string{"error": "Не удалось сгенерировать код подтверждения"})
 	}
 
 	verificationCode := fmt.Sprintf("%06d", randomNumber)
-
-	models.ChangeEmailCodes[userID] = models.ChangeEmail{
-		Code:     verificationCode,
-		TimeLife: time.Now().Add(15 * time.Minute),
-	}
+	SetChangeEmailCode(sUserID, verificationCode, 5*time.Minute)
 
 	err = smtp.SendMessage(profile.Login, "Смена почты", verificationCode)
 	if err != nil {
@@ -97,9 +93,9 @@ func (p Profiles) SendVerificationCodeForChangeEmail() revel.Result {
 func (p Profiles) VerifyAndChangeEmail() revel.Result {
 	userID, err := middleware.ValidateJWT(p.Request, "auth_token")
 	if err != nil {
-		//p.Response.Status = http.StatusUnauthorized
 		return p.Redirect("/login")
 	}
+	sUserID := fmt.Sprintf("%d", userID)
 	var vprofile = new(models.VerifyProfile)
 	err = p.Params.BindJSON(vprofile)
 	if err != nil {
@@ -113,21 +109,16 @@ func (p Profiles) VerifyAndChangeEmail() revel.Result {
 		revel.AppLog.Error(err.Error())
 		return p.RenderJSON(map[string]string{"error": err.Error()})
 	}
-	changeEmail, ok := models.ChangeEmailCodes[userID]
+	changeEmailCode, ok := GetChangeEmailCode(sUserID)
 	if !ok {
 		p.Response.Status = http.StatusNotFound
-		return p.RenderJSON(map[string]string{"error": "Код подтверждения не найден. Пожалуйста, запросите новый код."})
+		return p.RenderJSON(map[string]string{"error": "Код подтверждения не найден или истек его срок. Пожалуйста, запросите новый код."})
 	}
-	if time.Now().After(changeEmail.TimeLife) {
-		delete(models.ChangeEmailCodes, userID)
-		p.Response.Status = http.StatusUnauthorized
-		return p.RenderJSON(map[string]string{"error": "Срок действия кода истек. Пожалуйста, запросите новый код."})
-	}
-	if changeEmail.Code != vprofile.Code {
+
+	if changeEmailCode != vprofile.Code {
 		p.Response.Status = http.StatusUnauthorized
 		return p.RenderJSON(map[string]string{"error": "Неверный код подтверждения"})
 	}
-	delete(models.ChangeEmailCodes, userID)
 
 	err = models.UpdateProfileByID(userID, &vprofile.Profile)
 	if err != nil {
@@ -135,39 +126,26 @@ func (p Profiles) VerifyAndChangeEmail() revel.Result {
 		revel.AppLog.Error(err.Error())
 		return p.RenderJSON(map[string]string{"error": err.Error()})
 	}
-
+	DeleteChangeEmailCode(sUserID)
 	return p.Redirect("/settings")
 }
 
 func (p Profiles) StopChangeEmail() revel.Result {
 	userID, err := middleware.ValidateJWT(p.Request, "auth_token")
 	if err != nil {
-		//p.Response.Status = http.StatusUnauthorized
 		return p.Redirect("/login")
 	}
-	var vprofile = new(models.VerifyProfile)
-	err = p.Params.BindJSON(vprofile)
-	if err != nil {
-		p.Response.Status = http.StatusBadRequest
-		return p.RenderJSON(map[string]string{"error": "Неверный запрос"})
-	}
-	validate := validator.New()
-	err = validate.Struct(vprofile.Profile)
-	if err != nil {
-		p.Response.Status = http.StatusBadRequest
-		revel.AppLog.Error(err.Error())
-		return p.RenderJSON(map[string]string{"error": err.Error()})
-	}
-	delete(models.ChangeEmailCodes, userID)
+	sUserID := fmt.Sprintf("%d", userID)
+	DeleteChangeEmailCode(sUserID)
 	return p.Redirect("/settings")
 }
 
 func (p Profiles) SendVerificationCodeForChangePassword() revel.Result {
 	userID, err := middleware.ValidateJWT(p.Request, "auth_token")
 	if err != nil {
-		//p.Response.Status = http.StatusUnauthorized
 		return p.Redirect("/login")
 	}
+	sUserID := fmt.Sprintf("%d", userID)
 	profile := new(models.Profiles)
 	err = p.Params.BindJSON(profile)
 	if err != nil {
@@ -176,18 +154,14 @@ func (p Profiles) SendVerificationCodeForChangePassword() revel.Result {
 		return p.RenderJSON(map[string]string{"error": err.Error()})
 	}
 
-	randomNumber, err := p.GenerateRandomNumber()
+	randomNumber, err := GenerateRandomNumber()
 	if err != nil {
 		p.Response.Status = http.StatusInternalServerError
 		return p.RenderJSON(map[string]string{"error": "Не удалось сгенерировать код подтверждения"})
 	}
 
 	verificationCode := fmt.Sprintf("%06d", randomNumber)
-
-	models.ChangePasswordCodes[userID] = models.ChangePassword{
-		Code:     verificationCode,
-		TimeLife: time.Now().Add(15 * time.Minute),
-	}
+	SetChangePasswordCode(sUserID, verificationCode, 5*time.Minute)
 
 	err = smtp.SendMessage(profile.Login, "Смена пароля", verificationCode)
 	if err != nil {
@@ -202,9 +176,9 @@ func (p Profiles) SendVerificationCodeForChangePassword() revel.Result {
 func (p Profiles) VerifyAndChangePassword() revel.Result {
 	userID, err := middleware.ValidateJWT(p.Request, "auth_token")
 	if err != nil {
-		//p.Response.Status = http.StatusUnauthorized
 		return p.Redirect("/login")
 	}
+	sUserID := fmt.Sprintf("%d", userID)
 	var vprofile = new(models.VerifyProfile)
 	err = p.Params.BindJSON(vprofile)
 	if err != nil {
@@ -218,21 +192,15 @@ func (p Profiles) VerifyAndChangePassword() revel.Result {
 		revel.AppLog.Error(err.Error())
 		return p.RenderJSON(map[string]string{"error": err.Error()})
 	}
-	changePassword, ok := models.ChangePasswordCodes[userID]
+	changePasswordCode, ok := GetChangePasswordCode(sUserID)
 	if !ok {
 		p.Response.Status = http.StatusNotFound
-		return p.RenderJSON(map[string]string{"error": "Код подтверждения не найден. Пожалуйста, запросите новый код."})
+		return p.RenderJSON(map[string]string{"error": "Код подтверждения не найден или истек его срок. Пожалуйста, запросите новый код."})
 	}
-	if time.Now().After(changePassword.TimeLife) {
-		delete(models.ChangePasswordCodes, userID)
-		p.Response.Status = http.StatusUnauthorized
-		return p.RenderJSON(map[string]string{"error": "Срок действия кода истек. Пожалуйста, запросите новый код."})
-	}
-	if changePassword.Code != vprofile.Code {
+	if changePasswordCode != vprofile.Code {
 		p.Response.Status = http.StatusUnauthorized
 		return p.RenderJSON(map[string]string{"error": "Неверный код подтверждения"})
 	}
-	delete(models.ChangePasswordCodes, userID)
 	hashPassword, err := middleware.HashPassword(vprofile.Profile.Password)
 	if err != nil {
 		p.Response.Status = http.StatusInternalServerError
@@ -246,30 +214,18 @@ func (p Profiles) VerifyAndChangePassword() revel.Result {
 		revel.AppLog.Error(err.Error())
 		return p.RenderJSON(map[string]string{"error": err.Error()})
 	}
-
+	DeleteChangePasswordCode(sUserID)
 	return p.Redirect("/settings")
 }
 
 func (p Profiles) StopChangePassword() revel.Result {
 	userID, err := middleware.ValidateJWT(p.Request, "auth_token")
 	if err != nil {
-		//p.Response.Status = http.StatusUnauthorized
 		return p.Redirect("/login")
 	}
-	var vprofile = new(models.VerifyProfile)
-	err = p.Params.BindJSON(vprofile)
-	if err != nil {
-		p.Response.Status = http.StatusBadRequest
-		return p.RenderJSON(map[string]string{"error": "Неверный запрос"})
-	}
-	validate := validator.New()
-	err = validate.Struct(vprofile.Profile)
-	if err != nil {
-		p.Response.Status = http.StatusBadRequest
-		revel.AppLog.Error(err.Error())
-		return p.RenderJSON(map[string]string{"error": err.Error()})
-	}
-	delete(models.ChangePasswordCodes, userID)
+	sUserID := fmt.Sprintf("%d", userID)
+
+	DeleteChangePasswordCode(sUserID)
 	return p.Redirect("/settings")
 }
 

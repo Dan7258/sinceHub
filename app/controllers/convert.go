@@ -14,7 +14,6 @@ import (
 
 func GetFileWithPublicationList(userID uint64, filters models.PublicationFiltres) (string, error) {
 	pub := new(models.Publications)
-	profile := new(Profiles)
 	doc := document.New()
 	defer doc.Close()
 	publications, err := pub.GetPublicationListByFilters(userID, filters)
@@ -49,7 +48,7 @@ func GetFileWithPublicationList(userID uint64, filters models.PublicationFiltres
 		AddRow(&row, strings.Join(authors, ", "))
 		authors = make([]string, 0)
 	}
-	randomNum, _ := profile.GenerateRandomNumber()
+	randomNum, _ := GenerateRandomNumber()
 	filename := fmt.Sprintf("public/uploads/%d_%d_list.docx", userID, randomNum)
 	err = doc.SaveToFile(filename)
 	if err != nil {
