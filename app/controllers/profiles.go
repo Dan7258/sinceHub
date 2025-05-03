@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/go-playground/validator/v10"
 	"github.com/revel/revel"
@@ -127,6 +128,7 @@ func (p Profiles) VerifyAndChangeEmail() revel.Result {
 		return p.RenderJSON(map[string]string{"error": err.Error()})
 	}
 	DeleteChangeEmailCode(sUserID)
+	_ = models.DeleteDataFromRedis(sUserID)
 	return p.Redirect("/settings")
 }
 
@@ -215,6 +217,7 @@ func (p Profiles) VerifyAndChangePassword() revel.Result {
 		return p.RenderJSON(map[string]string{"error": err.Error()})
 	}
 	DeleteChangePasswordCode(sUserID)
+	_ = models.DeleteDataFromRedis(sUserID)
 	return p.Redirect("/settings")
 }
 
@@ -296,6 +299,11 @@ func (p Profiles) Login(login, password string) revel.Result {
 }
 
 func (p Profiles) Logout() revel.Result {
+	userID, err := middleware.ValidateJWT(p.Request, "auth_token")
+	if err == nil {
+		sUserID := fmt.Sprintf("%d", userID)
+		_ = models.DeleteDataFromRedis(sUserID)
+	}
 	middleware.SetCookieData(p.Controller, "auth_token", "", true)
 	return p.Redirect("/login")
 }
@@ -325,7 +333,25 @@ func (p Profiles) GetUserData() revel.Result {
 		p.Response.Status = http.StatusUnauthorized
 		return p.Redirect("/login")
 	}
-	profile, _ := models.GetUserProfile(userID)
+	profile := new(models.Profiles)
+	sUserID := fmt.Sprintf("%d", userID)
+	data, err := models.GetDataFromRedis(sUserID)
+	if data != nil && err == nil {
+		err = json.Unmarshal(data, profile)
+		if err == nil {
+			revel.AppLog.Debug("Данные профиля получили с redis")
+			return p.RenderJSON(profile)
+		}
+	}
+	profile, err = models.GetUserProfile(userID)
+	if err != nil {
+		p.Response.Status = http.StatusInternalServerError
+		return p.RenderJSON(map[string]string{"error": err.Error()})
+	}
+	data, err = json.Marshal(profile)
+	if err == nil {
+		_ = models.SetDataInRedis(sUserID, data, time.Hour)
+	}
 
 	return p.RenderJSON(profile)
 }
@@ -341,18 +367,20 @@ func (p Profiles) GetUsersDataForCreatePublication() revel.Result {
 	return p.RenderJSON(profile)
 }
 
-func (p Profiles) DeleteProfileByID(id uint64) revel.Result {
-	_, err := middleware.ValidateJWT(p.Request, "auth_token")
+func (p Profiles) DeleteProfileByID() revel.Result {
+	userID, err := middleware.ValidateJWT(p.Request, "auth_token")
 	if err != nil {
 		p.Response.Status = http.StatusUnauthorized
 		return p.Redirect("/login")
 	}
-	err = models.DeleteProfileByID(id)
+	sUserID := fmt.Sprintf("%d", userID)
+	err = models.DeleteProfileByID(userID)
 	if err != nil {
 		p.Response.Status = http.StatusInternalServerError
 		return p.RenderJSON(map[string]string{"error": err.Error()})
 	}
 	middleware.SetCookieData(p.Controller, "auth_token", "", true)
+	_ = models.DeleteDataFromRedis(sUserID)
 	return p.RenderJSON(map[string]int{"status": http.StatusNoContent})
 }
 
@@ -377,6 +405,7 @@ func (p Profiles) UpdateProfileByID() revel.Result {
 		//p.Response.Status = http.StatusUnauthorized
 		return p.Redirect("/login")
 	}
+	sUserID := fmt.Sprintf("%d", userID)
 	profile := new(models.Profiles)
 	err = p.Params.BindJSON(profile)
 	if err != nil {
@@ -389,7 +418,6 @@ func (p Profiles) UpdateProfileByID() revel.Result {
 		p.Response.Status = http.StatusUnprocessableEntity
 		return p.RenderJSON(map[string]string{"error": err.Error()})
 	}
-
 	err = models.UpdateProfileByID(userID, profile)
 
 	if err != nil {
@@ -398,6 +426,7 @@ func (p Profiles) UpdateProfileByID() revel.Result {
 	}
 
 	p.Response.Status = http.StatusNoContent
+	_ = models.DeleteDataFromRedis(sUserID)
 	return p.RenderJSON(map[string]int{"status": http.StatusNoContent})
 }
 
@@ -471,50 +500,20 @@ func (p Profiles) GetMySubscribesList() revel.Result {
 	return p.RenderJSON(profiles)
 }
 
-func (p Profiles) AddPublicationsToProfile(id uint64) revel.Result {
-	var pubIDs []uint64
-	err := p.Params.BindJSON(&pubIDs)
-	if err != nil {
-		p.Response.Status = http.StatusBadRequest
-		return p.RenderJSON(map[string]string{"error": err.Error()})
-	}
-	err = models.AddPublicationsToProfile(id, pubIDs)
-	if err != nil {
-		p.Response.Status = http.StatusInternalServerError
-		return p.RenderJSON(map[string]string{"error": err.Error()})
-	}
-	p.Response.Status = http.StatusNoContent
-	return p.RenderJSON(map[string]int{"status": http.StatusNoContent})
-}
-
-func (p Profiles) DeletePublicationsFromProfile(id uint64) revel.Result {
-	var pubIDs []uint64
-	err := p.Params.BindJSON(&pubIDs)
-	if err != nil {
-		p.Response.Status = http.StatusBadRequest
-		return p.RenderJSON(map[string]string{"error": err.Error()})
-	}
-	err = models.DeletePublicationsFromProfile(id, pubIDs)
-	if err != nil {
-		p.Response.Status = http.StatusInternalServerError
-		return p.RenderJSON(map[string]string{"error": err.Error()})
-	}
-	p.Response.Status = http.StatusNoContent
-	return p.RenderJSON(map[string]int{"status": http.StatusNoContent})
-}
-
 func (p Profiles) AddSubscriberToProfile(id uint64) revel.Result {
 	userID, err := middleware.ValidateJWT(p.Request, "auth_token")
 	if err != nil {
 		//p.Response.Status = http.StatusUnauthorized
 		return p.Redirect("/login")
 	}
-
+	sUserID := fmt.Sprintf("%d", userID)
 	err = models.AddSubscriberToProfile(userID, id)
 	if err != nil {
 		p.Response.Status = http.StatusInternalServerError
 		return p.RenderJSON(map[string]string{"error": err.Error()})
 	}
+	_ = models.DeleteDataFromRedis(sUserID)
+	_ = models.DeleteDataFromRedis(fmt.Sprintf("%d", id))
 	return p.RenderJSON(map[string]int{"status": http.StatusNoContent})
 }
 
@@ -524,11 +523,13 @@ func (p Profiles) DeleteSubscriberFromProfile(id uint64) revel.Result {
 		//p.Response.Status = http.StatusUnauthorized
 		return p.Redirect("/login")
 	}
-
+	sUserID := fmt.Sprintf("%d", userID)
 	err = models.DeleteSubscriberFromProfile(userID, id)
 	if err != nil {
 		p.Response.Status = http.StatusInternalServerError
 		return p.RenderJSON(map[string]string{"error": err.Error()})
 	}
+	_ = models.DeleteDataFromRedis(sUserID)
+	_ = models.DeleteDataFromRedis(fmt.Sprintf("%d", id))
 	return p.RenderJSON(map[string]int{"status": http.StatusNoContent})
 }

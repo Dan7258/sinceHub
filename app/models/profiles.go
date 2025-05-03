@@ -1,13 +1,10 @@
 package models
 
 import (
-	"context"
-	"encoding/json"
 	"fmt"
 	"gorm.io/gorm"
 	"os"
 	"strings"
-	"time"
 )
 
 type Profiles struct {
@@ -71,13 +68,6 @@ func ThsProfilesIsExist(login string) bool {
 
 func GetUserProfile(ID uint64) (*Profiles, error) {
 	profile := new(Profiles)
-	data, err := GetDataFromRedis(fmt.Sprintf("%d", ID))
-	if data != nil && err == nil {
-		json.Unmarshal(data, profile)
-		fmt.Println("Данные профиля получили с redis")
-		return profile, nil
-	}
-
 	result := DB.Preload("Publications", func(db *gorm.DB) *gorm.DB {
 		return db.Order("created_at desc")
 	}).
@@ -95,11 +85,6 @@ func GetUserProfile(ID uint64) (*Profiles, error) {
 	if result.Error != nil {
 		return nil, result.Error
 	}
-	data, err = json.Marshal(profile)
-	if err != nil {
-		fmt.Errorf("Данные не закодировались в json")
-	}
-	SetDataInRedis(fmt.Sprintf("%d", ID), data, time.Hour)
 	return profile, nil
 }
 
@@ -139,22 +124,18 @@ func DeleteProfileByID(ID uint64) error {
 	profile := new(Profiles)
 	err := DB.Model(new(Subscribs)).Where("profiles_id = ? OR subscribers_id = ?", ID, ID).Delete(new(Subscribs)).Error
 	if err != nil {
-		fmt.Println("aaa")
 		return err
 	}
 	err = DB.Model(new(Publications)).Where("owner_id = ?", ID).Delete(new(Publications)).Error
 	if err != nil {
-		fmt.Println("bbb")
 		return err
 	}
 	result := DB.Delete(profile, ID)
 	if result.Error != nil {
-		fmt.Println("cccc")
 		return result.Error
 	}
-	err = RemoveFilesByUseID(ID)
+	err = RemoveFilesByUserID(ID)
 	if err != nil {
-		fmt.Println("ddddd")
 		return err
 	}
 	if result.RowsAffected == 0 {
@@ -163,7 +144,7 @@ func DeleteProfileByID(ID uint64) error {
 	return nil
 }
 
-func RemoveFilesByUseID(ID uint64) error {
+func RemoveFilesByUserID(ID uint64) error {
 	dir := "public/uploads/"
 	files, err := os.ReadDir(dir)
 	if err != nil {
@@ -174,7 +155,6 @@ func RemoveFilesByUseID(ID uint64) error {
 		if !file.IsDir() && f[0] == fmt.Sprintf("%d", ID) {
 			os.Remove(dir + file.Name())
 		}
-
 	}
 	return nil
 }
@@ -199,9 +179,6 @@ func UpdateProfileByID(ID uint64, updProfile *Profiles) error {
 	if result.RowsAffected == 0 {
 		return fmt.Errorf("Профиль с ID %d не найден", ID)
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	RDB.Del(ctx, fmt.Sprintf("%d", ID))
 	return nil
 }
 

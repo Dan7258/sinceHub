@@ -44,9 +44,9 @@ POST    /settings/stop-change-email                 Profiles.StopChangeEmail
 POST    /settings/stop-change-password              Profiles.StopChangePassword
 GET     /settings                                   Profiles.ShowSettingsPage
 POST    /subscribe/:id                              Profiles.AddSubscriberToProfile
-DELETE  /profiles/id/:id                            Profiles.DeleteProfileByID
+DELETE  /profiles                                   Profiles.DeleteProfileByID
 DELETE  /unsubscribe/:id                            Profiles.DeleteSubscriberFromProfile
-PATCH   /profiles/                                  Profiles.UpdateProfileByID
+PATCH   /profiles                                   Profiles.UpdateProfileByID
 
 GET     /authors                                    Profiles.ShowAuthorsPage
 GET     /get-authors-data                           Profiles.GetAllProfiles

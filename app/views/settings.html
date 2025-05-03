@@ -384,7 +384,7 @@
                 alert('Нет данных для сохранения');
                 return;
             }
-            fetch('/profiles/', {
+            fetch('/profiles', {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(nonEmptyFields),
@@ -546,7 +546,7 @@
                             }
 
                             // Отправляем запрос на удаление с ID пользователя
-                            return fetch(`/profiles/id/${userData.id}`, {
+                            return fetch(`/profiles`, {
                                 method: 'DELETE',
                                 credentials: 'include'
                             });

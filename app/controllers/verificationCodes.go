@@ -31,7 +31,8 @@ func SetVerificationEmailCode(key, code string, timeLife time.Duration) {
 }
 
 func GetVerificationEmailCode(key string) (string, bool) {
-	value, err := models.GetDataFromRedis(key + "_" + "verifyEmailCode")
+	key = key + "_" + "verifyEmailCode"
+	value, err := models.GetDataFromRedis(key)
 	revel.AppLog.Info(key + "_" + "verifyEmailCode")
 	if err != nil || value == nil {
 		revel.AppLog.Error(err.Error())
@@ -63,8 +64,9 @@ func SetChangeEmailCode(key, code string, timeLife time.Duration) {
 }
 
 func GetChangeEmailCode(key string) (string, bool) {
-	value, err := models.GetDataFromRedis(key + "_" + "changeEmailCode")
-	revel.AppLog.Info(key + "_" + "changeEmailCode")
+	key = key + "_" + "changeEmailCode"
+	value, err := models.GetDataFromRedis(key)
+	revel.AppLog.Info(key)
 	if err != nil || value == nil {
 		revel.AppLog.Error(err.Error())
 		return models.GetChangeEmailCode(key)
@@ -95,8 +97,9 @@ func SetChangePasswordCode(key, code string, timeLife time.Duration) {
 }
 
 func GetChangePasswordCode(key string) (string, bool) {
-	value, err := models.GetDataFromRedis(key + "_" + "changePasswordCode")
-	revel.AppLog.Info(key + "_" + "changePasswordCode")
+	key = key + "_" + "changePasswordCode"
+	value, err := models.GetDataFromRedis(key)
+	revel.AppLog.Info(key)
 	if err != nil || value == nil {
 		revel.AppLog.Error(err.Error())
 		return models.GetChangePasswordCode(key)
