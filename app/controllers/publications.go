@@ -30,6 +30,8 @@ func (p Publications) CreatePublication() revel.Result {
 		//p.Response.Status = http.StatusUnauthorized
 		return p.Redirect("/login")
 	}
+	sUserID := fmt.Sprintf("%d", userID)
+	_ = models.DeleteDataFromRedis(sUserID)
 	pub := new(models.Publications)
 	pub.Title = p.Params.Get("title")
 	pub.Abstract = p.Params.Get("abstract")
@@ -68,8 +70,14 @@ func (p Publications) CreatePublication() revel.Result {
 		p.Response.Status = http.StatusInternalServerError
 		return p.RenderJSON(map[string]string{"error": "Ошибка при сохранении файла"})
 	}
-	pub.FileLink = filePath
 
+	pub.FileLink, err = models.PutFileInMINIO(filePath)
+	if err != nil {
+		revel.AppLog.Error(err.Error())
+		p.Response.Status = http.StatusInternalServerError
+		return p.RenderJSON(map[string]string{"error": err.Error()})
+	}
+	_ = os.Remove(filePath)
 	unique := make(map[uint64]interface{}, 0)
 	rawTagIDs := p.Params.Values["tags[]"]
 	tagIDs := make([]uint64, 0)
@@ -97,25 +105,21 @@ func (p Publications) CreatePublication() revel.Result {
 	err = models.CreatePublication(pub, tagIDs, coauthorIDs)
 
 	if err != nil {
+		revel.AppLog.Error(err.Error())
 		p.Response.Status = http.StatusInternalServerError
 		return p.RenderJSON(map[string]string{"error": err.Error()})
 	}
 
-	//p.Response.Status = http.StatusCreated
-
 	return p.Redirect("/profile")
 }
 
-//func fillSliceUniqueIDs(data []string, res []uint64) revel.Result {
-//	unique := make(map[uint64]interface{}, 0)
-//
-//}
-
 func (p Publications) DeleteAuthorFromPublication() revel.Result {
-	_, err := middleware.ValidateJWT(p.Request, "auth_token")
+	userID, err := middleware.ValidateJWT(p.Request, "auth_token")
 	if err != nil {
 		return p.Redirect("/login")
 	}
+	sUserID := fmt.Sprintf("%d", userID)
+	_ = models.DeleteDataFromRedis(sUserID)
 	dafp := new(DeleteAuthorFromPublication)
 	p.Params.BindJSON(&dafp)
 	fmt.Println(dafp)
@@ -148,6 +152,8 @@ func (p Publications) DeletePublication() revel.Result {
 		//p.Response.Status = http.StatusUnauthorized
 		return p.Redirect("/login")
 	}
+	sUserID := fmt.Sprintf("%d", userID)
+	_ = models.DeleteDataFromRedis(sUserID)
 	pub := new(models.Publications)
 	err = p.Params.BindJSON(pub)
 	if err != nil {
@@ -165,10 +171,9 @@ func (p Publications) DeletePublication() revel.Result {
 		p.Response.Status = http.StatusInternalServerError
 		return p.RenderJSON(map[string]string{"error": err.Error()})
 	}
-	err = os.Remove(pub.FileLink)
+	err = models.RemoveFileFromMINIO(pub.FileLink)
 	if err != nil {
-		p.Response.Status = http.StatusInternalServerError
-		return p.RenderJSON(map[string]string{"error": err.Error()})
+		revel.AppLog.Error(err.Error())
 	}
 
 	return p.RenderJSON(map[string]int{"status": http.StatusNoContent})
@@ -180,6 +185,8 @@ func (p Publications) UpdatePublication() revel.Result {
 		//p.Response.Status = http.StatusUnauthorized
 		return p.Redirect("/login")
 	}
+	sUserID := fmt.Sprintf("%d", userID)
+	_ = models.DeleteDataFromRedis(sUserID)
 	pub := new(models.Publications)
 	pubID := p.Params.Get("publication_id")
 	pub.ID, err = strconv.ParseUint(pubID, 10, 64)
@@ -203,12 +210,6 @@ func (p Publications) UpdatePublication() revel.Result {
 
 	fileHeader, ok := p.Params.Files["file"]
 	if ok && len(fileHeader) != 0 {
-
-		err = os.Remove(pub.FileLink)
-		if err != nil {
-			p.Response.Status = http.StatusInternalServerError
-			return p.RenderJSON(map[string]string{"error": err.Error()})
-		}
 		file, err := fileHeader[0].Open()
 		if err != nil {
 			p.Response.Status = http.StatusInternalServerError
@@ -229,7 +230,16 @@ func (p Publications) UpdatePublication() revel.Result {
 			p.Response.Status = http.StatusInternalServerError
 			return p.RenderJSON(map[string]string{"error": "Ошибка при сохранении файла"})
 		}
-		pub.FileLink = filePath
+		fileLink, err := models.PutFileInMINIO(filePath)
+		if err != nil {
+			p.Response.Status = http.StatusInternalServerError
+			return p.RenderJSON(map[string]string{"error": "Ошибка при сохранении файла"})
+		}
+		err = models.RemoveFileFromMINIO(pub.FileLink)
+		pub.FileLink = fileLink
+		if err != nil {
+			revel.AppLog.Error(err.Error())
+		}
 	}
 
 	unique := make(map[uint64]interface{}, 0)

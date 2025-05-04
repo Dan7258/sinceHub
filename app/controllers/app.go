@@ -20,6 +20,7 @@ func init() {
 	revel.OnAppStart(models.InitDB)
 	revel.OnAppStart(models.InitRDB)
 	revel.OnAppStart(models.StartUpdateVerifyCodeLists)
+	revel.OnAppStart(models.InitMINIO)
 	revel.OnAppStart(smtp.InitSMTP)
 	revel.OnAppStart(InitLicense)
 }

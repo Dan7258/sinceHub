@@ -9,12 +9,14 @@ services:
     depends_on:
       - db
       - redis
+      - s3
     env_file:
       - .env
   db:
     image: postgres:latest
     container_name: postgres_container
-    restart: always
+    env_file:
+      - .env
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: admin
@@ -32,5 +34,18 @@ services:
     volumes:
       - ./redis.conf:/usr/local/etc/redis/redis.conf
     command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+  s3:
+    image: quay.io/minio/minio:latest
+    container_name: s3
+    ports:
+      - "9999:9999" #API
+      - "9990:9990" #web UI
+    environment:
+      MINIO_ROOT_USER: scienceHubAdmin
+      MINIO_ROOT_PASSWORD: scienceHubAdmin
+    volumes:
+      - minio-data:/uploads
+    command: ["server", "/uploads", "--address", ":9999", "--console-address", ":9990"]
 volumes:
   pgdata:
+  minio-data:

@@ -126,6 +126,8 @@ func DeleteProfileByID(ID uint64) error {
 	if err != nil {
 		return err
 	}
+	var publications []Publications
+	_ = DB.Model(new(Publications)).Where("owner_id = ?", ID).Find(&publications)
 	err = DB.Model(new(Publications)).Where("owner_id = ?", ID).Delete(new(Publications)).Error
 	if err != nil {
 		return err
@@ -134,13 +136,17 @@ func DeleteProfileByID(ID uint64) error {
 	if result.Error != nil {
 		return result.Error
 	}
-	err = RemoveFilesByUserID(ID)
-	if err != nil {
-		return err
-	}
 	if result.RowsAffected == 0 {
 		return fmt.Errorf("Профиль с ID %d не найден", ID)
 	}
+	for _, publication := range publications {
+		_ = RemoveFileFromMINIO(publication.FileLink)
+	}
+	//err = RemoveFilesByUserID(ID)
+	//if err != nil {
+	//	return err
+	//}
+
 	return nil
 }
 
