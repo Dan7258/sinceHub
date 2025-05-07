@@ -79,12 +79,20 @@ func createExcelDocument(userID uint64, publications []models.Publications) (str
 	exel := spreadsheet.New()
 	defer exel.Close()
 	sheet := exel.AddSheet()
-	//style := exel.StyleSheet.AddCellStyle()
-	//font := exel.StyleSheet.AddFont()
-	//font.SetName("Times New Roman")
-	//font.SetBold(true)
-	//font.SetSize(14)
-	//style.SetFont(font)
+
+	boldStyle := exel.StyleSheet.AddCellStyle()
+	boldFont := exel.StyleSheet.AddFont()
+	boldFont.SetName("Times New Roman")
+	boldFont.SetBold(true)
+	boldFont.SetSize(12)
+	boldStyle.SetFont(boldFont)
+
+	style := exel.StyleSheet.AddCellStyle()
+	font := exel.StyleSheet.AddFont()
+	font.SetName("Times New Roman")
+	font.SetSize(12)
+	style.SetFont(font)
+
 	headers := []string{
 		"№",
 		"Наименование работы",
@@ -94,22 +102,21 @@ func createExcelDocument(userID uint64, publications []models.Publications) (str
 	row := sheet.AddRow()
 
 	for i, header := range headers {
+		SetCellParams(row.AddCell(), boldStyle, header)
 		width := measurement.Distance(utf8.RuneCountInString(header))
 		if i == 0 {
 			sheet.Column(uint32(i) + 1).SetWidth(width * 40)
 		} else {
-			sheet.Column(uint32(i) + 1).SetWidth(width * 10)
+			sheet.Column(uint32(i) + 1).SetWidth(width * 12)
 		}
-		row.AddCell().SetString(header)
 		row.SetHeightAuto()
-
 	}
 	for i, publication := range publications {
 		row = sheet.AddRow()
-		row.AddCell().SetString(fmt.Sprint(i + 1))
-		row.AddCell().SetString(publication.Title)
-		row.AddCell().SetString(fmt.Sprint(publication.CreatedAt.Format("02.01.2006")))
-		row.AddCell().SetString(getAuthorsFromPublication(publication))
+		SetCellParams(row.AddCell(), style, fmt.Sprint(i+1))
+		SetCellParams(row.AddCell(), style, publication.Title)
+		SetCellParams(row.AddCell(), style, fmt.Sprint(publication.CreatedAt.Format("02.01.2006")))
+		SetCellParams(row.AddCell(), style, getAuthorsFromPublication(publication))
 		row.SetHeightAuto()
 	}
 	err := exel.Validate()
@@ -124,6 +131,11 @@ func createExcelDocument(userID uint64, publications []models.Publications) (str
 	}
 
 	return filename, err
+}
+
+func SetCellParams(cell spreadsheet.Cell, style spreadsheet.CellStyle, text string) {
+	cell.SetString(text)
+	cell.SetStyle(style)
 }
 
 func AddRow(row *document.Row, text string) {
