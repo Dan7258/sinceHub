@@ -366,7 +366,7 @@ func (p Publications) GetFileWithPublicationList() revel.Result {
 	reader := bytes.NewReader(fileData)
 
 	go func() {
-		time.Sleep(2 * time.Second)
+		time.Sleep(10 * time.Second)
 		_ = os.Remove(filename)
 	}()
 
