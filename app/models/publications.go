@@ -24,7 +24,8 @@ type TypeFile uint64
 const (
 	Word TypeFile = iota
 	Exel
-	Libra
+	LibraWord
+	LibraExcel
 )
 
 type PublicationFiltres struct {

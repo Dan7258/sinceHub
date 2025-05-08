@@ -14,7 +14,15 @@ FROM debian:bookworm-slim
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        libreoffice-core \
+        libreoffice-writer \
+        libreoffice-calc \
+        libreoffice-common \
+        fonts-dejavu-core \
+        ca-certificates && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /usr/local/go /usr/local/go
 ENV PATH="/usr/local/go/bin:${PATH}"

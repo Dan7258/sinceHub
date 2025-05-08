@@ -8,6 +8,8 @@ import (
 	"github.com/unidoc/unioffice/measurement"
 	"github.com/unidoc/unioffice/schema/soo/wml"
 	"github.com/unidoc/unioffice/spreadsheet"
+	"os/exec"
+	"path"
 	"unicode/utf8"
 
 	"os"
@@ -27,9 +29,12 @@ func GetFileWithPublicationList(userID uint64, filters models.PublicationFiltres
 		filename, err = createWordDocument(userID, publications)
 	case models.Exel:
 		filename, err = createExcelDocument(userID, publications)
+	case models.LibraWord:
+		filename, err = createLibraWordDocument(userID, publications)
+	case models.LibraExcel:
+		filename, err = createLibraExcelDocument(userID, publications)
 	}
 	return filename, err
-
 }
 
 func createWordDocument(userID uint64, publications []models.Publications) (string, error) {
@@ -131,6 +136,38 @@ func createExcelDocument(userID uint64, publications []models.Publications) (str
 	}
 
 	return filename, err
+}
+
+func createLibraWordDocument(userID uint64, publications []models.Publications) (string, error) {
+	filename, err := createWordDocument(userID, publications)
+	if err != nil {
+		return "", err
+	}
+	dir := path.Dir(filename)
+	err = exec.Command("libreoffice", "--headless", "--convert-to", "odt", "--outdir", dir, filename).Run()
+
+	if err != nil {
+		return "", err
+	}
+	os.Remove(filename)
+	filename = strings.Replace(filename, "docx", "odt", 1)
+	return filename, nil
+}
+
+func createLibraExcelDocument(userID uint64, publications []models.Publications) (string, error) {
+	filename, err := createExcelDocument(userID, publications)
+	if err != nil {
+		return "", err
+	}
+	dir := path.Dir(filename)
+	err = exec.Command("libreoffice", "--headless", "--convert-to", "ods", "--outdir", dir, filename).Run()
+
+	if err != nil {
+		return "", err
+	}
+	os.Remove(filename)
+	filename = strings.Replace(filename, "xlsx", "ods", 1)
+	return filename, nil
 }
 
 func SetCellParams(cell spreadsheet.Cell, style spreadsheet.CellStyle, text string) {
