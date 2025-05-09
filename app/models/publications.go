@@ -19,6 +19,17 @@ type Publications struct {
 	Tags      []Tags     `json:"tags" gorm:"many2many:publication_tags;constraint:OnDelete:CASCADE"`
 }
 
+type Paginator struct {
+	FirstID int `json:"first_id"`
+	Count   int `json:"count"`
+}
+
+type SearchData struct {
+	Title string   `json:"title"`
+	Tags  []uint64 `json:"tags"`
+	Paginator
+}
+
 type TypeFile uint64
 
 const (
@@ -28,7 +39,7 @@ const (
 	LibraExcel
 )
 
-type PublicationFiltres struct {
+type PublicationDownloadFiltres struct {
 	CountPublications uint64
 	DateStart         time.Time
 	DateEnd           time.Time
@@ -40,7 +51,10 @@ func CreatePublication(pub *Publications, tagIDs []uint64, coauthorIDs []uint64)
 	if result.Error != nil {
 		return result.Error
 	}
-	var tags []Tags
+	tags, err := GetTagsByID(tagIDs)
+	if err != nil {
+		return err
+	}
 	result = DB.Find(&tags, tagIDs)
 	DB.Model(pub).Association("Tags").Append(tags)
 	if result.Error != nil {
@@ -99,6 +113,47 @@ func GetPublicationByID(ID uint64) (*Publications, error) {
 		return nil, result.Error
 	}
 	return pub, nil
+}
+
+func GetPublicationsByID(idList []uint64) ([]Publications, error) {
+	publications := make([]Publications, 0)
+	result := DB.Model(new(Publications)).Preload("Tags").Preload("Profiles", func(db *gorm.DB) *gorm.DB {
+		return db.Select("id, first_name, last_name, middle_name")
+	}).Where("id = ?", idList).Find(publications)
+	return publications, result.Error
+}
+
+func GetPublicationsWithSearchParams(data SearchData) ([]Publications, error) {
+	publications := make([]Publications, 0)
+	query := DB.Model(new(Publications)).Distinct("publications.*").
+		Preload("Tags").
+		Preload("Profiles", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id, first_name, last_name, middle_name")
+		}).
+		Where("id >= ?", data.FirstID).
+		Order("created_at asc").
+		Limit(data.Count)
+	if query.Error != nil {
+		return nil, query.Error
+	}
+	if data.Tags != nil && len(data.Tags) > 0 {
+		query.Joins("left join publication_tags on publication_tags.publications_id = publications.id").
+			Where("publication_tags.tags_id IN (?)", data.Tags)
+	}
+	if data.Title != "" {
+		query.Where("title LIKE ?", fmt.Sprintf("%%%s%%", data.Title))
+	}
+	err := query.Find(&publications).Error
+	return publications, err
+}
+
+func GetLastPublications(paginator Paginator) ([]Publications, error) {
+	publications := make([]Publications, 0)
+	result := DB.Model(new(Publications)).Preload("Tags").Preload("Profiles", func(db *gorm.DB) *gorm.DB {
+		return db.Select("id, first_name, last_name, middle_name")
+	}).Where("id >= ?", paginator.FirstID).Order("created_at asc").Limit(paginator.Count).Find(&publications)
+	fmt.Println(publications)
+	return publications, result.Error
 }
 
 func GetAllPublications() ([]Publications, error) {
@@ -185,7 +240,7 @@ func DeleteProfileFromPublication(ID uint64, profileID uint64) error {
 	return nil
 }
 
-func (pub *Publications) GetPublicationListByFilters(userID uint64, filters PublicationFiltres) ([]Publications, error) {
+func GetPublicationListByFilters(userID uint64, filters PublicationDownloadFiltres) ([]Publications, error) {
 	publications := make([]Publications, 0)
 	query := DB.Model(new(Publications)).
 		Joins("JOIN profile_publications ON profile_publications.publications_id = publications.id").

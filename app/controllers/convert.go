@@ -17,9 +17,8 @@ import (
 	"strings"
 )
 
-func GetFileWithPublicationList(userID uint64, filters models.PublicationFiltres) (string, error) {
-	pub := new(models.Publications)
-	publications, err := pub.GetPublicationListByFilters(userID, filters)
+func GetFileWithPublicationList(userID uint64, filters models.PublicationDownloadFiltres) (string, error) {
+	publications, err := models.GetPublicationListByFilters(userID, filters)
 	if err != nil {
 		return "", err
 	}

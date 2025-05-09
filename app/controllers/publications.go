@@ -286,6 +286,22 @@ func (p Publications) GetPublicationsData() revel.Result {
 	return p.RenderJSON(pub)
 }
 
+func (p Publications) GetPublicationsPaginator() revel.Result {
+	searchData := new(models.SearchData)
+	err := p.Params.BindJSON(searchData)
+	if err != nil {
+		p.Response.Status = http.StatusUnprocessableEntity
+		return p.RenderJSON(map[string]string{"error": err.Error()})
+	}
+	pubs, err := models.GetPublicationsWithSearchParams(*searchData)
+	if err != nil {
+		p.Response.Status = http.StatusInternalServerError
+		return p.RenderJSON(map[string]string{"error": err.Error()})
+	}
+	p.Response.Status = http.StatusOK
+	return p.RenderJSON(pubs)
+}
+
 func (p Publications) AddTagsToPublication(id uint64) revel.Result {
 	var tagIDs []uint64
 	err := p.Params.BindJSON(&tagIDs)
@@ -340,7 +356,7 @@ func (p Publications) GetFileWithPublicationList() revel.Result {
 		//p.Response.Status = http.StatusUnauthorized
 		return p.Redirect("/login")
 	}
-	filters := new(models.PublicationFiltres)
+	filters := new(models.PublicationDownloadFiltres)
 	err = p.Params.BindJSON(filters)
 	if err != nil {
 		return p.RenderJSON(map[string]string{"error": err.Error()})

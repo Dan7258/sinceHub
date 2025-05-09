@@ -19,6 +19,7 @@ GET     /getPublicationsData                    Publications.GetPublicationsData
 GET     /create-publication                     Publications.ShowCreatePublicationPage
 GET     /update-publication                     Publications.ShowUpdatePublicationPage
 GET     /update-publication/:id                 Publications.GetPublicationData
+POST    /get-publications-paginator             Publications.GetPublicationsPaginator
 POST    /get-file-with-publication-list         Publications.GetFileWithPublicationList
 POST    /create-publication                     Publications.CreatePublication
 DELETE  /delete-publication                     Publications.DeletePublication

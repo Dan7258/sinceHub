@@ -29,6 +29,13 @@ func GetTagByID(ID int) (*Tags, error) {
 	return tag, nil
 }
 
+func GetTagsByID(IDList []uint64) ([]Tags, error) {
+	tags := make([]Tags, 0)
+	tag := new(Tags)
+	result := DB.Model(tag).Find(&tags, IDList)
+	return tags, result.Error
+}
+
 func GetTagByName(name string) (*Tags, error) {
 	tag := new(Tags)
 	result := DB.Preload("Publications").Where("name = ?", name).First(tag)
