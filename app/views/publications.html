@@ -20,6 +20,10 @@
             --tag-unselected-color: #ecf0f1;
         }
 
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
             background-color: var(--light-bg);
@@ -32,8 +36,7 @@
         .container {
             max-width: min(900px, 95%);
             margin: 80px auto 20px auto;
-
-            padding: 2rem;
+            padding: 1.5rem;
             background: var(--card-bg);
             border-radius: 10px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -44,10 +47,10 @@
             border-bottom: 2px solid #5882C1;
             padding-bottom: 0.5rem;
             margin-bottom: 1.5rem;
-            font-size: clamp(1.5rem, 5vw, 2rem);
+            font-size: clamp(1.5rem, 4vw, 1.8rem);
         }
 
-        .controls {
+        .search-bar {
             margin-bottom: 1.5rem;
             display: flex;
             gap: 0.75rem;
@@ -55,7 +58,7 @@
             flex-wrap: wrap;
         }
 
-        .controls input {
+        .search-bar input {
             flex: 1;
             min-width: 200px;
             padding: 0.75rem;
@@ -66,13 +69,13 @@
             transition: border-color 0.2s ease;
         }
 
-        .controls input:focus {
+        .search-bar input:focus {
             border-color: var(--primary-color);
         }
 
-        .controls button {
+        .search-bar button {
             padding: 0.75rem 1.5rem;
-            background: #3498db;
+            background: var(--primary-color);
             color: white;
             border: none;
             border-radius: 4px;
@@ -82,7 +85,7 @@
             white-space: nowrap;
         }
 
-        .controls button:hover {
+        .search-bar button:hover {
             background: #2980b9;
         }
 
@@ -91,7 +94,7 @@
         }
 
         .reset-all-button:hover {
-            background: #c0392b  !important;
+            background: #c0392b !important;
         }
 
         .publication {
@@ -360,18 +363,28 @@
         }
 
         @media (max-width: 768px) {
-            .controls {
+            .container {
+                padding: 1rem;
+            }
+
+            .search-bar {
                 flex-direction: column;
                 align-items: stretch;
             }
 
-            .controls input {
+            .search-bar input {
                 min-width: 100%;
             }
 
-            .controls button {
+            .search-bar button {
                 width: 100%;
                 padding: 0.75rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: clamp(1.2rem, 5vw, 1.5rem);
             }
         }
     </style>
@@ -380,7 +393,7 @@
 {{template "header.html"}}
 <div class="container">
     <h1>Публикации</h1>
-    <div class="controls">
+    <div class="search-bar">
         <input type="text" id="searchInput" placeholder="Поиск публикаций...">
         <button class="filter-button" onclick="openFilterModal()">Фильтры</button>
         <button class="reset-all-button" onclick="resetAll()">Сбросить всё</button>

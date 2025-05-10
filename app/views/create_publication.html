@@ -94,6 +94,20 @@
       transform: scale(0.98);
     }
 
+    .btn-back {
+      background-color: #6b7280;
+    }
+
+    .btn-back:hover {
+      background-color: #5a6268;
+    }
+
+    .button-group {
+      display: flex;
+      justify-content: space-between; /* Spread buttons to opposite edges */
+      gap: 10px;
+    }
+
     .ts-wrapper {
       margin-bottom: 24px;
     }
@@ -131,7 +145,6 @@
       color: #999;
       font-style: italic;
     }
-
   </style>
 </head>
 <body>
@@ -168,7 +181,10 @@
       <select id="tags" name="tags[]" required multiple placeholder="Выберите теги..."></select>
     </div>
 
-    <button type="submit" class="btn">Опубликовать</button>
+    <div class="button-group">
+      <button type="submit" class="btn">Опубликовать</button>
+      <button type="button" class="btn btn-back" onclick="window.location.href='/profile'">Назад</button>
+    </div>
   </form>
 </div>
 
@@ -298,16 +314,16 @@
         body: formData,
         credentials: 'include'
       })
-      .then(response => {
-        if (response.redirected) {
-          window.location.href = response.url;
-        } else {
-          return response.text(); // если надо логировать, можно оставить
-        }
-      })
-      .catch(error => {
-        alert('Произошла ошибка при отправке формы: ' + error.message);
-      });
+              .then(response => {
+                if (response.redirected) {
+                  window.location.href = response.url;
+                } else {
+                  return response.text(); // если надо логировать, можно оставить
+                }
+              })
+              .catch(error => {
+                alert('Произошла ошибка при отправке формы: ' + error.message);
+              });
     });
   });
 </script>

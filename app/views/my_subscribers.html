@@ -69,22 +69,6 @@
             border-color: var(--primary-color);
         }
 
-        .search-bar button {
-            padding: 0.75rem 1.5rem;
-            background: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: 4px;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: background-color 0.2s ease;
-            white-space: nowrap;
-        }
-
-        .search-bar button:hover {
-            background: #2980b9;
-        }
-
         .author-card {
             background: #f9fafb;
             padding: 1.25rem;
@@ -147,10 +131,33 @@
             100% { background-position: -200% 0; }
         }
 
-        /* Responsive adjustments */
+        .pagination-controls {
+            text-align: center;
+            margin-top: 2rem;
+        }
+
+        .pagination-controls button {
+            padding: 0.75rem 1.5rem;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .pagination-controls button:hover {
+            background: #2980b9;
+        }
+
+        .pagination-controls button:disabled {
+            background: var(--muted-text);
+            cursor: not-allowed;
+        }
+
         @media (max-width: 768px) {
             .container {
-                margin: 0.5rem;
                 padding: 1rem;
             }
 
@@ -161,15 +168,6 @@
 
             .search-bar input {
                 min-width: 100%;
-            }
-
-            .search-bar button {
-                width: 100%;
-                padding: 0.75rem;
-            }
-
-            .author-card {
-                padding: 1rem;
             }
         }
 
@@ -198,33 +196,63 @@
     <h1>Подписчики</h1>
     <div class="search-bar">
         <input type="text" id="search-input" placeholder="Поиск по ID или ФИО">
-        <button onclick="searchAuthors()">Поиск</button>
     </div>
     <div id="authors">
-        <!-- Skeleton loader -->
         <div class="skeleton" style="width: 80%;"></div>
         <div class="skeleton" style="width: 60%;"></div>
         <div class="skeleton" style="width: 70%; height: 100px;"></div>
         <div class="skeleton" style="width: 50%;"></div>
     </div>
+    <div class="pagination-controls">
+        <button id="prevPage" onclick="loadPreviousPage()" disabled>← Назад</button>
+        <span id="pageInfo" style="margin: 0 1rem; display: inline-block; min-width: 80px;">Страница 1</span>
+        <button id="nextPage" onclick="loadNextPage()">Вперёд →</button>
+    </div>
 </div>
 
 <script>
     let allAuthors = [];
+    let searchTimeout;
+    let searchData = {
+        stroke: "",
+        first_id: 0,
+        count: 2
+    };
+    let paginationHistory = [0];
+    let currentPage = 1;
 
     document.addEventListener("DOMContentLoaded", function() {
-        setTimeout(loadAuthors, 300);
+        setTimeout(() => loadAuthors(true), 300);
+        document.getElementById('search-input').addEventListener('input', handleSearchInput);
     });
 
-    function loadAuthors() {
-        const authorsContainer = document.getElementById('authors');
+    function handleSearchInput() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(searchAuthors, 500);
+    }
 
-        fetch('/get-subscribers-data', {
+    function loadAuthors(isFirstLoad = false) {
+        const authorsContainer = document.getElementById('authors');
+        const prevButton = document.getElementById('prevPage');
+        const nextButton = document.getElementById('nextPage');
+        const pageInfo = document.getElementById('pageInfo');
+
+        authorsContainer.innerHTML = `
+        <div class="skeleton" style="width: 80%;"></div>
+        <div class="skeleton" style="width: 60%;"></div>
+        <div class="skeleton" style="width: 70%; height: 100px;"></div>
+        <div class="skeleton" style="width: 50%;"></div>
+    `;
+
+        fetch('/get-subscribers-paginator', {
+            method: 'POST',
             credentials: 'include',
             headers: {
                 'Accept': 'application/json',
+                'Content-Type': 'application/json',
                 'Cache-Control': 'no-cache'
-            }
+            },
+            body: JSON.stringify(searchData)
         })
             .then(async response => {
                 if (response.status === 401) {
@@ -240,12 +268,42 @@
 
                 const data = await response.json();
                 allAuthors = data;
+
+                if (isFirstLoad || searchData.first_id === 0) {
+                    paginationHistory = [0];
+                    currentPage = 1;
+                } else if (!paginationHistory.includes(searchData.first_id)) {
+                    paginationHistory.push(searchData.first_id);
+                    currentPage = paginationHistory.length;
+                }
+
                 renderAuthors(data);
+
+                pageInfo.textContent = `Страница ${currentPage}`;
+                prevButton.disabled = paginationHistory.length <= 1;
+                // Отключаем кнопку "Вперёд", если данных меньше, чем запрошено, или нет данных
+                nextButton.disabled = data.length < searchData.count || data.length === 0;
             })
             .catch(error => {
                 console.error('Ошибка при получении подписчиков:', error);
                 showError();
             });
+    }
+
+    function loadNextPage() {
+        if (allAuthors.length === searchData.count) {
+            const lastAuthor = allAuthors[allAuthors.length - 1];
+            searchData.first_id = lastAuthor.id;
+            loadAuthors();
+        }
+    }
+
+    function loadPreviousPage() {
+        if (paginationHistory.length > 1) {
+            paginationHistory.pop();
+            searchData.first_id = paginationHistory[paginationHistory.length - 1];
+            loadAuthors();
+        }
     }
 
     function renderAuthors(authors) {
@@ -283,20 +341,20 @@
 
     function searchAuthors() {
         const query = document.getElementById('search-input').value.trim().toLowerCase();
-        if (!query) {
-            renderAuthors(allAuthors);
-            return;
+        let searchQuery = '';
+
+        if (query) {
+            const isOnlyDigits = /^\d+$/.test(query);
+            if (isOnlyDigits || query.length >= 2) {
+                searchQuery = query;
+            }
         }
 
-        const filteredAuthors = allAuthors.filter(author => {
-            const idMatch = author.id && author.id.toString() === query;
-            const nameMatch = `${author.first_name || ''} ${author.last_name || ''} ${author.middle_name || ''}`
-                .toLowerCase()
-                .includes(query);
-            return idMatch || nameMatch;
-        });
-
-        renderAuthors(filteredAuthors);
+        searchData.stroke = searchQuery;
+        searchData.first_id = 0;
+        paginationHistory = [0];
+        currentPage = 1;
+        loadAuthors(true);
     }
 
     function escapeHtml(unsafe) {
@@ -314,7 +372,7 @@
         authorsContainer.innerHTML = `
             <div class="error-message">
                 Ошибка при загрузке подписчиков. Пожалуйста, попробуйте позже.
-                <button onclick="loadAuthors()" style="
+                <button onclick="loadAuthors(true)" style="
                     margin-top: 1rem;
                     padding: 0.5rem 1rem;
                     background: var(--primary-color);
@@ -328,13 +386,6 @@
             </div>
         `;
     }
-
-    // Handle Enter key for search
-    document.getElementById('search-input').addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            searchAuthors();
-        }
-    });
 </script>
 </body>
 </html>

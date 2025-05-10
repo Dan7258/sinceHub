@@ -1,6 +1,10 @@
 package models
 
-import "gorm.io/gorm"
+import (
+	"scinceHub/app/middleware"
+	"strconv"
+	"strings"
+)
 
 type Subscribs struct {
 	ProfilesId    uint64 `json:"profiles_id" gorm:"primaryKey;not null"`
@@ -38,24 +42,58 @@ func DeleteSubscriberFromProfile(subID uint64, profileID uint64) error {
 	return nil
 }
 
-func GetMySubscribersList(profileID uint64) ([]Profiles, error) {
-	profile := new(Profiles)
-	result := DB.Preload("SubscribersList.SubscribersList", func(db *gorm.DB) *gorm.DB {
-		return DB.Select("id, first_name, last_name, middle_name, country, vac, appointment")
-	}).Preload("SubscribersList.Publications").Preload("Publications").First(profile, profileID)
-	if result.Error != nil {
-		return nil, result.Error
+func GetMySubscribersWithSearchParams(profileID uint64, searchData SearchDataForProfiles) ([]Profiles, error) {
+	subscribers := make([]Profiles, 0)
+	words := strings.Split(searchData.Stroke, " ")
+	query := DB.Model(new(Profiles)).
+		Joins("left join subscribs on subscribs.subscribers_id = profiles.id").
+		Where("subscribs.profiles_id = ?", profileID).
+		Preload("SubscribersList").
+		Preload("MySubscribesList").
+		Preload("Publications").
+		Where("profiles.id >= ?", searchData.FirstID)
+
+	for i := 0; searchData.Stroke != "" && i < len(words); i++ {
+		likeword := "%" + words[i] + "%"
+
+		if i == 0 {
+			query.Where("profiles.first_name ILIKE ? OR profiles.last_name ILIKE ? OR profiles.middle_name ILIKE ?", likeword, likeword, likeword)
+		} else {
+			query.Or("profiles.first_name ILIKE ? OR profiles.last_name ILIKE ? OR profiles.middle_name ILIKE ?", likeword, likeword, likeword)
+		}
+		if middleware.IsInteger(words[i]) {
+			id, _ := strconv.Atoi(words[i])
+			query.Or("profiles.id = ?", id)
+		}
 	}
-	return profile.SubscribersList, nil
+	err := query.Find(&subscribers).Limit(searchData.Count).Error
+	return subscribers, err
 }
 
-func GetMySubscribesList(profileID uint64) ([]Profiles, error) {
-	profile := new(Profiles)
-	result := DB.Preload("MySubscribesList.SubscribersList", func(db *gorm.DB) *gorm.DB {
-		return DB.Select("id, first_name, last_name, middle_name, country, vac, appointment")
-	}).Preload("MySubscribesList.Publications").Preload("Publications").First(profile, profileID)
-	if result.Error != nil {
-		return nil, result.Error
+func GetMySubscribesWithSearchParams(profileID uint64, searchData SearchDataForProfiles) ([]Profiles, error) {
+	subscribers := make([]Profiles, 0)
+	words := strings.Split(searchData.Stroke, " ")
+	query := DB.Model(new(Profiles)).
+		Joins("left join subscribs on subscribs.profiles_id = profiles.id").
+		Where("subscribs.subscribers_id = ?", profileID).
+		Preload("SubscribersList").
+		Preload("MySubscribesList").
+		Preload("Publications").
+		Where("profiles.id >= ?", searchData.FirstID)
+
+	for i := 0; searchData.Stroke != "" && i < len(words); i++ {
+		likeword := "%" + words[i] + "%"
+
+		if i == 0 {
+			query.Where("profiles.first_name ILIKE ? OR profiles.last_name ILIKE ? OR profiles.middle_name ILIKE ?", likeword, likeword, likeword)
+		} else {
+			query.Or("profiles.first_name ILIKE ? OR profiles.last_name ILIKE ? OR profiles.middle_name ILIKE ?", likeword, likeword, likeword)
+		}
+		if middleware.IsInteger(words[i]) {
+			id, _ := strconv.Atoi(words[i])
+			query.Or("profiles.id = ?", id)
+		}
 	}
-	return profile.MySubscribesList, nil
+	err := query.Find(&subscribers).Limit(searchData.Count).Error
+	return subscribers, err
 }

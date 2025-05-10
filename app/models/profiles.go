@@ -174,11 +174,6 @@ func DeleteProfileByID(ID uint64) error {
 	for _, publication := range publications {
 		_ = RemoveFileFromMINIO(publication.FileLink)
 	}
-	//err = RemoveFilesByUserID(ID)
-	//if err != nil {
-	//	return err
-	//}
-
 	return nil
 }
 

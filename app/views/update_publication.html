@@ -102,6 +102,14 @@
             background-color: #c1121f;
         }
 
+        .btn-back {
+            background-color: #6b7280;
+        }
+
+        .btn-back:hover {
+            background-color: #5a6268;
+        }
+
         .ts-wrapper {
             margin-bottom: 24px;
         }
@@ -137,6 +145,7 @@
 
         .button-group {
             display: flex;
+            justify-content: space-between;
             gap: 12px;
             margin-top: 24px;
         }
@@ -176,8 +185,11 @@
             <select id="tags" name="tags[]" multiple></select>
         </div>
 
-        <button type="submit" class="btn">Сохранить изменения</button>
-        <button type="button" class="btn" id="deleteButton" style="background-color: #e74c3c; margin-left: 10px;">Удалить публикацию</button>
+        <div class="button-group">
+            <button type="submit" class="btn">Сохранить изменения</button>
+            <button type="button" class="btn btn-danger" id="deleteButton">Удалить публикацию</button>
+            <button type="button" class="btn btn-back" onclick="window.location.href='/profile'">Назад</button>
+        </div>
     </form>
 </div>
 
@@ -239,7 +251,6 @@
                 document.getElementById("abstract").value = data.abstract || "";
                 document.getElementById("owner_id").value = data.owner_id;
                 document.getElementById("fileLinkHidden").value = data.file_link;
-
 
                 currentOwnerId = data.owner_id;
 
@@ -318,40 +329,40 @@
                     alert("Ошибка: " + err.message);
                 });
         });
-    });
-    document.getElementById("deleteButton").addEventListener("click", function () {
-        if (confirm("Вы уверены, что хотите удалить эту публикацию? Это действие нельзя отменить.")) {
-            const pubId = Number(document.getElementById("publication_id").value);
-            const ownerId = Number(document.getElementById("owner_id").value);
-            const fileLink = document.getElementById("fileLinkHidden").value;
 
-            fetch("/delete-publication", {
-                method: "DELETE",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                credentials: "include",
-                body: JSON.stringify({
-                    id: pubId,
-                    owner_id: ownerId,
-                    file_link: fileLink
+        document.getElementById("deleteButton").addEventListener("click", function () {
+            if (confirm("Вы уверены, что хотите удалить эту публикацию? Это действие нельзя отменить.")) {
+                const pubId = Number(document.getElementById("publication_id").value);
+                const ownerId = Number(document.getElementById("owner_id").value);
+                const fileLink = document.getElementById("fileLinkHidden").value;
+
+                fetch("/delete-publication", {
+                    method: "DELETE",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    credentials: "include",
+                    body: JSON.stringify({
+                        id: pubId,
+                        owner_id: ownerId,
+                        file_link: fileLink
+                    })
                 })
-            })
-                .then(res => {
-                    if (res.ok) {
-                        alert("Публикация удалена");
-                        window.location.href = "/profile"; // перенаправление на список публикаций
-                    } else {
-                        return res.text().then(text => { throw new Error(text); });
-                    }
-                })
-                .catch(err => {
-                    console.error("Ошибка при удалении публикации:", err);
-                    alert("Ошибка при удалении: " + err.message);
-                });
-        }
+                    .then(res => {
+                        if (res.ok) {
+                            alert("Публикация удалена");
+                            window.location.href = "/my-profile";
+                        } else {
+                            return res.text().then(text => { throw new Error(text); });
+                        }
+                    })
+                    .catch(err => {
+                        console.error("Ошибка при удалении публикации:", err);
+                        alert("Ошибка при удалении: " + err.message);
+                    });
+            }
+        });
     });
 </script>
-
 </body>
 </html>

@@ -52,9 +52,9 @@ PATCH   /profiles                                   Profiles.UpdateProfileByID
 GET     /authors                                    Profiles.ShowAuthorsPage
 GET     /subscribers                                Profiles.ShowMySubscribers
 GET     /subscribes                                 Profiles.ShowMySubscribes
-GET     /get-subscribers-data                       Profiles.GetMySubscribersList
-GET     /get-subscribes-data                        Profiles.GetMySubscribesList
 POST    /get-authors-paginator                      Profiles.GetAuthorsPaginator
+POST    /get-subscribers-paginator                  Profiles.GetMySubscribersPaginator
+POST    /get-subscribes-paginator                   Profiles.GetMySubscribesPaginator
 
 GET     /admin                                      Admins.ShowAdminPage
 GET     /login-admin                                Admins.ShowLoginAdminPage

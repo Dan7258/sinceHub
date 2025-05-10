@@ -491,13 +491,19 @@ func (p Profiles) GetAuthorsPaginator() revel.Result {
 	return p.RenderJSON(profiles)
 }
 
-func (p Profiles) GetMySubscribersList() revel.Result {
+func (p Profiles) GetMySubscribersPaginator() revel.Result {
 	userID, err := middleware.ValidateJWT(p.Request, "auth_token")
 	if err != nil {
 		//p.Response.Status = http.StatusUnauthorized
 		return p.Redirect("/login")
 	}
-	profiles, err := models.GetMySubscribersList(userID)
+	searchData := new(models.SearchDataForProfiles)
+	err = p.Params.BindJSON(&searchData)
+	if err != nil {
+		p.Response.Status = http.StatusBadRequest
+		return p.RenderJSON(map[string]string{"error": err.Error()})
+	}
+	profiles, err := models.GetMySubscribersWithSearchParams(userID, *searchData)
 	if err != nil {
 		p.Response.Status = http.StatusInternalServerError
 		return p.RenderJSON(map[string]string{"error": err.Error()})
@@ -506,13 +512,19 @@ func (p Profiles) GetMySubscribersList() revel.Result {
 	return p.RenderJSON(profiles)
 }
 
-func (p Profiles) GetMySubscribesList() revel.Result {
+func (p Profiles) GetMySubscribesPaginator() revel.Result {
 	userID, err := middleware.ValidateJWT(p.Request, "auth_token")
 	if err != nil {
 		//p.Response.Status = http.StatusUnauthorized
 		return p.Redirect("/login")
 	}
-	profiles, err := models.GetMySubscribesList(userID)
+	searchData := new(models.SearchDataForProfiles)
+	err = p.Params.BindJSON(&searchData)
+	if err != nil {
+		p.Response.Status = http.StatusBadRequest
+		return p.RenderJSON(map[string]string{"error": err.Error()})
+	}
+	profiles, err := models.GetMySubscribesWithSearchParams(userID, *searchData)
 	if err != nil {
 		p.Response.Status = http.StatusInternalServerError
 		return p.RenderJSON(map[string]string{"error": err.Error()})
