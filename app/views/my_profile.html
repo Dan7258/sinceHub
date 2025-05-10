@@ -8,7 +8,8 @@
     <style>
         :root {
             --bg-color: #f9fafb;
-            --primary: #2563eb;
+            --primary: #3498db;
+            --primary-hover: #2980b9;
             --secondary: #6b7280;
             --accent: #10b981;
             --card-bg: #ffffff;
@@ -17,6 +18,8 @@
             --light-bg: #f4f7fa;
             --error-color: #e74c3c;
             --muted-text: #7f8c8d;
+            --tag-selected-color: #1d4ed8;
+            --tag-unselected-color: #ecf0f1;
         }
 
         body {
@@ -60,27 +63,6 @@
             color: var(--secondary);
         }
 
-        .action-buttons {
-            display: flex;
-            gap: 10px;
-            margin: 20px 0;
-        }
-
-        .action-buttons button {
-            background-color: #4D38D7;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            padding: 10px 18px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.2s ease;
-        }
-
-        .action-buttons button:hover {
-            background-color: #3A2AA3;
-        }
-
         .main-content {
             background: var(--card-bg);
             padding: 25px;
@@ -91,6 +73,88 @@
         .main-content h2 {
             margin-top: 0;
             font-size: 1.25em;
+        }
+
+        .controls {
+            margin-bottom: 1.5rem;
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .controls input {
+            flex: 1;
+            min-width: 200px;
+            padding: 0.75rem;
+            font-size: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .controls input:focus {
+            border-color: var(--primary);
+        }
+
+        .create-button {
+            background: #4D38D7 !important;
+            color: white;
+            font-weight: normal;
+        }
+
+        .create-button:hover {
+            background: #3A2AA3 !important;
+        }
+
+        .controls button, .sort-button {
+            padding: 0.75rem 1.5rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .controls button:hover, .sort-button:hover {
+            background: var(--primary-hover);
+        }
+
+        .sort-container {
+            position: relative;
+        }
+
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            z-index: 1000;
+            min-width: 200px;
+        }
+
+        .dropdown-menu.show {
+            display: block;
+        }
+
+        .dropdown-item {
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+            color: var(--text-color);
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .dropdown-item:hover {
+            background: var(--light-bg);
         }
 
         .filters {
@@ -187,19 +251,172 @@
             border: none;
         }
 
-        .subscription-item {
-            display: inline-block;
-            padding: 8px 14px;
-            background: var(--primary);
-            color: white;
-            border-radius: 20px;
-            font-size: 0.9em;
-            margin: 5px 5px 5px 0;
-            text-decoration: none;
+        .pagination-controls {
+            text-align: center;
+            margin-top: 2rem;
         }
 
-        .subscription-item.unsubscribed {
-            background: #6d28d9;
+        .pagination-controls button {
+            padding: 0.75rem 1.5rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .pagination-controls button:hover {
+            background: var(--primary-hover);
+        }
+
+        .pagination-controls button:disabled {
+            background: var(--muted-text);
+            cursor: not-allowed;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 8px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 1.25rem;
+            color: #2c3e50;
+        }
+
+        .close-button {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--muted-text);
+        }
+
+        .tag-search {
+            width: 100%;
+            padding: 0.75rem;
+            font-size: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .tag-search:focus {
+            border-color: var(--primary);
+        }
+
+        .tag-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .tag {
+            padding: 6px 12px;
+            border-radius: 8px;
+            background-color: var(--tag-unselected-color);
+            color: var(--text-color);
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            user-select: none;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .tag.selected {
+            background: var(--tag-selected-color);
+            color: white;
+            border-color: var(--tag-selected-color);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+        }
+
+        .tag:hover {
+            background-color: #d0d0d0;
+            transform: scale(1.05);
+        }
+
+        .tag.selected:hover {
+            background: #1d4ed8;
+            transform: scale(1.05);
+        }
+
+        .modal-footer {
+            margin-top: 1rem;
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.5rem;
+        }
+
+        .apply-button, .back-button {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            color: white;
+        }
+
+        .apply-button {
+            background: var(--primary);
+        }
+
+        .apply-button:hover {
+            background: var(--primary-hover);
+        }
+
+        .back-button {
+            background: var(--muted-text);
+        }
+
+        .back-button:hover {
+            background: #6b7280;
+        }
+
+        .reset-filters-button {
+            padding: 0.75rem 1.5rem;
+            background: var(--error-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .reset-filters-button:hover {
+            background: #c0392b;
         }
 
         @media (max-width: 768px) {
@@ -210,6 +427,20 @@
 
             .filters .row {
                 flex-direction: column;
+            }
+
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .controls input {
+                min-width: 100%;
+            }
+
+            .controls button, .sort-button {
+                width: 100%;
+                padding: 0.75rem;
             }
         }
     </style>
@@ -227,10 +458,6 @@
             <p>Страна: <span id="country"></span></p>
             <p>Подписчики: <span id="subscribers_count"></span> | Подписки: <span id="subscriptions_count"></span></p>
         </div>
-    </div>
-
-    <div class="action-buttons">
-        <button id="create_publication_btn">Создать публикацию</button>
     </div>
 
     <div class="main-content">
@@ -263,12 +490,57 @@
         </div>
 
         <h2>Публикации</h2>
+        <div class="controls">
+            <input type="text" id="searchInput" placeholder="Поиск публикаций...">
+            <button class="filter-button" onclick="openFilterModal()">Фильтры</button>
+            <div class="sort-container">
+                <button class="sort-button" onclick="toggleSortDropdown()">Сортировать</button>
+                <div class="dropdown-menu" id="sortDropdown">
+                    <div class="dropdown-item" onclick="selectSort('date', 'desc')">Дата (сначала новые)</div>
+                    <div class="dropdown-item" onclick="selectSort('date', 'asc')">Дата (сначала старые)</div>
+                    <div class="dropdown-item" onclick="selectSort('title', 'asc')">Название (А-Я)</div>
+                    <div class="dropdown-item" onclick="selectSort('title', 'desc')">Название (Я-А)</div>
+                </div>
+            </div>
+            <button id="create_publication_btn" class="create-button">Создать публикацию</button>
+        </div>
         <div id="publications">Загрузка...</div>
-
+        <div class="pagination-controls">
+            <button id="prevPage" onclick="loadPreviousPage()" disabled>← Назад</button>
+            <span id="pageInfo">Страница 1</span>
+            <button id="nextPage" onclick="loadNextPage()">Вперёд →</button>
+        </div>
     </div>
 </div>
+
+<div class="modal" id="filterModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Выберите теги</h2>
+            <button class="close-button" onclick="closeFilterModal()">×</button>
+        </div>
+        <input type="text" class="tag-search" id="tagSearch" placeholder="Поиск тегов..." oninput="filterTags()">
+        <div class="tag-list" id="tagList"></div>
+        <div class="modal-footer">
+            <button class="reset-filters-button" onclick="resetFilters()">Сбросить фильтры</button>
+            <button class="back-button" onclick="closeFilterModal()">Назад</button>
+            <button class="apply-button" onclick="applyFilters()">Применить</button>
+        </div>
+    </div>
+</div>
+
 <script>
+    let allPublications = [];
+    let allTags = [];
+    let selectedTags = [];
+    let currentPage = 1;
+    const itemsPerPage = 2;
+    let sortBy = 'date'; // 'date' or 'title'
+    let sortOrder = 'desc'; // 'asc' or 'desc'
+    let searchQuery = '';
+
     document.addEventListener("DOMContentLoaded", function() {
+        closeFilterModal();
         fetch('/getUserData', { credentials: 'include' })
             .then(response => {
                 if (response.status === 401) {
@@ -293,61 +565,263 @@
                 document.getElementById('appointment').innerText = data.appointment || 'Не указано';
                 document.getElementById('subscribers_count').innerText = data.SubscribersList?.length || 0;
                 document.getElementById('subscriptions_count').innerText = data.MySubscribesList?.length || 0;
-                const publicationsList = document.getElementById('publications');
-                publicationsList.innerHTML = '';
-                if (data.Publications && data.Publications.length > 0) {
-                    data.Publications.forEach(pub => {
-                        const div = document.createElement('div');
-                        div.className = 'publication';
-                        const isOwner = data.id === pub.owner_id;
 
-                        div.innerHTML = `
-                            <h3>${pub.title || 'Без названия'}</h3>
-                            <p><strong>Аннотация:</strong> ${pub.abstract || 'Нет аннотации'}</p>
-                            <p><strong>Создано:</strong> ${new Date(pub.created_at).toLocaleDateString()}</p>
-                            <p><strong>Обновлено:</strong> ${new Date(pub.updated_at).toLocaleDateString()}</p>
-                            <div class="profiles">
-                                <strong>Соавторы:</strong> ${
-                            pub.profiles && pub.profiles.length > 0
-                                ? pub.profiles
-                                    .filter(p => p.id !== data.id)
-                                    .map(p => `<a href="/user-profile/${p.id}">${(p.first_name || '')} ${(p.last_name || '')}</a>`.trim())
-                                    .join('')
-                                : 'Соавторы не указаны'
+                allPublications = data.Publications || [];
+                // Собираем уникальные теги по id
+                const tagMap = new Map();
+                allPublications.forEach(pub => {
+                    (pub.tags || []).forEach(tag => {
+                        if (tag.id && tag.name) {
+                            tagMap.set(Number(tag.id), { id: Number(tag.id), name: tag.name });
                         }
-                            </div>
-                            <div class="tags">
-                                <strong>Теги:</strong> ${
-                            pub.tags && pub.tags.length > 0
-                                ? pub.tags.map(tag => `<span>${tag.name}</span>`).join('')
-                                : 'Теги не указаны'
-                        }
-                            </div>
-                            <div style="margin-top: 10px;">
-                                ${pub.file_link ? `<a href="${pub.file_link}" target="_blank" style="margin-right: 15px; color:#4D38D7; text-decoration: none;">📄 Скачать статью (PDF)</a>` : ''}
-                                ${
-                            isOwner
-                                ? `<a href="/update-publication?id=${pub.id}" style="color: #e67e22; text-decoration: none; margin-right: 15px;">✏️ Редактировать</a>`
-                                : `<button onclick="notMyPublication(${pub.id})" style="padding: 5px 10px; border: none; background: #e74c3c; color: #fff; border-radius: 5px; cursor: pointer;">❌ Я не являюсь соавтором</button>`
-                        }
-                            </div>
-                        `;
-                        publicationsList.appendChild(div);
                     });
-                } else {
-                    publicationsList.innerHTML = 'Публикаций нет';
-                }
+                });
+                allTags = Array.from(tagMap.values());
+                renderPublications();
+                renderTagsInModal(allTags);
 
+                document.getElementById('searchInput').addEventListener('input', function(e) {
+                    searchQuery = e.target.value.trim().toLowerCase();
+                    currentPage = 1;
+                    renderPublications();
+                });
+
+                document.getElementById('searchInput').addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        searchQuery = e.target.value.trim().toLowerCase();
+                        currentPage = 1;
+                        renderPublications();
+                    }
+                });
+
+                // Close dropdown when clicking outside
+                document.addEventListener('click', function(e) {
+                    const sortContainer = document.querySelector('.sort-container');
+                    if (!sortContainer.contains(e.target)) {
+                        document.getElementById('sortDropdown').classList.remove('show');
+                    }
+                });
             })
             .catch(error => {
                 console.error('Ошибка при получении профиля:', error);
                 document.querySelector('.container').innerHTML =
                     '<p style="color: #e74c3c;">Ошибка при загрузке профиля</p>';
             });
+
         document.getElementById('create_publication_btn').addEventListener('click', function() {
             window.location.href = '/create-publication';
         });
     });
+
+    function toggleSortDropdown() {
+        document.getElementById('sortDropdown').classList.toggle('show');
+    }
+
+    function selectSort(newSortBy, newSortOrder) {
+        sortBy = newSortBy;
+        sortOrder = newSortOrder;
+        document.querySelector('.sort-button').textContent =
+            `Сортировать: ${sortBy === 'date' ? (sortOrder === 'desc' ? 'Дата (сначала новые)' : 'Дата (сначала старые)') : (sortOrder === 'asc' ? 'Название (А-Я)' : 'Название (Я-А)')}`;
+        document.getElementById('sortDropdown').classList.remove('show');
+        currentPage = 1;
+        renderPublications();
+    }
+
+    function filterPublications() {
+        return allPublications.filter(pub => {
+            const matchesTitle = !searchQuery || (pub.title || '').toLowerCase().includes(searchQuery);
+            const matchesTags = selectedTags.length === 0 || (pub.tags || []).some(tag => selectedTags.includes(Number(tag.id)));
+            return matchesTitle && matchesTags;
+        });
+    }
+
+    function sortPublications(publications) {
+        return publications.sort((a, b) => {
+            if (sortBy === 'title') {
+                const comparison = (a.title || '').localeCompare(b.title || '');
+                return sortOrder === 'asc' ? comparison : -comparison;
+            } else {
+                const comparison = new Date(b.created_at) - new Date(a.created_at);
+                return sortOrder === 'asc' ? -comparison : comparison;
+            }
+        });
+    }
+
+    function renderPublications() {
+        const publicationsList = document.getElementById('publications');
+        const scrollPosition = publicationsList.getBoundingClientRect().top + window.pageYOffset;
+
+        const prevButton = document.getElementById('prevPage');
+        const nextButton = document.getElementById('nextPage');
+        const pageInfo = document.getElementById('pageInfo');
+
+        let filteredPublications = filterPublications();
+        filteredPublications = sortPublications(filteredPublications);
+
+        const totalItems = filteredPublications.length;
+        const totalPages = Math.ceil(totalItems / itemsPerPage);
+        currentPage = Math.min(currentPage, totalPages || 1);
+
+        const start = (currentPage - 1) * itemsPerPage;
+        const end = start + itemsPerPage;
+        const paginatedPublications = filteredPublications.slice(start, end);
+
+        publicationsList.innerHTML = '';
+        if (paginatedPublications.length > 0) {
+            paginatedPublications.forEach(pub => {
+                const div = document.createElement('div');
+                div.className = 'publication';
+                const isOwner = parseInt(document.getElementById('user_id').innerText) === pub.owner_id;
+
+                div.innerHTML = `
+                    <h3>${escapeHtml(pub.title || 'Без названия')}</h3>
+                    <p><strong>Аннотация:</strong> ${escapeHtml(pub.abstract || 'Нет аннотации')}</p>
+                    <p><strong>Создано:</strong> ${new Date(pub.created_at).toLocaleDateString()}</p>
+                    <p><strong>Обновлено:</strong> ${new Date(pub.updated_at).toLocaleDateString()}</p>
+                    <div class="profiles">
+                        <strong>Соавторы:</strong> ${
+                    pub.profiles && pub.profiles.length > 0
+                        ? pub.profiles
+                            .filter(p => p.id !== parseInt(document.getElementById('user_id').innerText))
+                            .map(p => `<a href="/user-profile/${p.id}">${escapeHtml((p.first_name || '') + ' ' + (p.last_name || ''))}</a>`.trim())
+                            .join('')
+                        : 'Соавторы не указаны'
+                }
+                    </div>
+                    <div class="tags">
+                        <strong>Теги:</strong> ${
+                    pub.tags && pub.tags.length > 0
+                        ? pub.tags.map(tag => `<span>${escapeHtml(tag.name)}</span>`).join('')
+                        : 'Теги не указаны'
+                }
+                    </div>
+                    <div style="margin-top: 10px;">
+                        ${pub.file_link ? `<a href="${escapeHtml(pub.file_link)}" target="_blank" style="margin-right: 15px; color:#4D38D7; text-decoration: none;">📄 Скачать статью (PDF)</a>` : ''}
+                        ${
+                    isOwner
+                        ? `<a href="/update-publication?id=${pub.id}" style="color: #e67e22; text-decoration: none; margin-right: 15px;">✏️ Редактировать</a>`
+                        : `<button onclick="notMyPublication(${pub.id})" style="padding: 5px 10px; border: none; background: #e74c3c; color: #fff; border-radius: 5px; cursor: pointer;">❌ Я не являюсь соавтором</button>`
+                }
+                    </div>
+                `;
+                publicationsList.appendChild(div);
+            });
+        } else {
+            publicationsList.innerHTML = 'Публикаций нет';
+        }
+
+        pageInfo.textContent = `Страница ${currentPage}`;
+        prevButton.disabled = currentPage <= 1;
+        nextButton.disabled = currentPage >= totalPages;
+
+        window.scrollTo({ top: scrollPosition, behavior: 'smooth' });
+    }
+
+    function loadNextPage() {
+        currentPage++;
+        renderPublications();
+    }
+
+    function loadPreviousPage() {
+        if (currentPage > 1) {
+            currentPage--;
+            renderPublications();
+        }
+    }
+
+    function filterTags() {
+        const searchValue = document.getElementById('tagSearch').value.toLowerCase();
+        const filteredTags = allTags.filter(tag =>
+            (tag.name || '').toLowerCase().includes(searchValue)
+        );
+        renderTagsInModal(filteredTags);
+    }
+
+    function renderTagsInModal(tags) {
+        const tagList = document.getElementById('tagList');
+        tagList.innerHTML = '';
+
+        if (!tags || tags.length === 0) {
+            tagList.innerHTML = '<p style="color: #7f8c8d; font-style: italic;">Теги не найдены</p>';
+            return;
+        }
+
+        const selectedTagsList = tags.filter(tag => selectedTags.includes(Number(tag.id)));
+        const unselectedTagsList = tags.filter(tag => !selectedTags.includes(Number(tag.id)));
+
+        const fragment = document.createDocumentFragment();
+
+        selectedTagsList.forEach(tag => {
+            const tagElement = createTagElement(tag, true);
+            fragment.appendChild(tagElement);
+        });
+
+        unselectedTagsList.forEach(tag => {
+            const tagElement = createTagElement(tag, false);
+            fragment.appendChild(tagElement);
+        });
+
+        tagList.appendChild(fragment);
+    }
+
+    function createTagElement(tag, isSelected) {
+        const tagElement = document.createElement('div');
+        tagElement.className = 'tag';
+        if (isSelected) {
+            tagElement.classList.add('selected');
+        }
+        tagElement.dataset.tagId = tag.id;
+        tagElement.textContent = escapeHtml(tag.name || 'Без названия');
+        tagElement.onclick = () => toggleTag(Number(tag.id), tagElement);
+        return tagElement;
+    }
+
+    function toggleTag(tagId, element) {
+        tagId = Number(tagId);
+        if (selectedTags.includes(tagId)) {
+            selectedTags = selectedTags.filter(id => id !== tagId);
+            element.classList.remove('selected');
+        } else {
+            selectedTags.push(tagId);
+            element.classList.add('selected');
+        }
+        filterTags();
+    }
+
+    function applyFilters() {
+        closeFilterModal();
+        currentPage = 1;
+        renderPublications();
+    }
+
+    function resetFilters() {
+        selectedTags = [];
+        document.getElementById('tagSearch').value = '';
+        renderTagsInModal(allTags);
+        closeFilterModal();
+        currentPage = 1;
+        renderPublications();
+    }
+
+    function openFilterModal() {
+        document.getElementById('filterModal').style.display = 'flex';
+        document.getElementById('tagSearch').value = '';
+        filterTags();
+    }
+
+    function closeFilterModal() {
+        document.getElementById('filterModal').style.display = 'none';
+    }
+
+    function escapeHtml(unsafe) {
+        if (!unsafe) return '';
+        return unsafe.toString()
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
 
     function notMyPublication(publicationId) {
         const confirmed = confirm("Вы точно не являетесь соавтором публикации?");
