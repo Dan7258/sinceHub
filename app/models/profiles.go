@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"gorm.io/gorm"
 	"os"
+	"scinceHub/app/middleware"
+	"strconv"
 	"strings"
 )
 
@@ -27,6 +29,11 @@ type ProfileWithSubscribitionStatus struct {
 	Profile      Profiles
 	Isubscribed  bool
 	IsSubscribed bool
+}
+
+type SearchDataForProfiles struct {
+	Stroke string `json:"stroke"`
+	Paginator
 }
 
 func CreateProfile(profile *Profiles) error {
@@ -109,6 +116,31 @@ func GetAllProfiles() ([]Profiles, error) {
 		return nil, result.Error
 	}
 	return profiles, nil
+}
+
+func GetAuthorsWithSearchParams(searchData SearchDataForProfiles) ([]Profiles, error) {
+	var profiles []Profiles
+	words := strings.Split(searchData.Stroke, " ")
+	query := DB.Model(new(Profiles)).Select("id, first_name, last_name, middle_name, country, vac, appointment").
+		Preload("Publications").
+		Preload("SubscribersList").
+		Preload("MySubscribesList").
+		Where("id >= ?", searchData.FirstID)
+	for i := 0; searchData.Stroke != "" && i < len(words); i++ {
+		likeword := "%" + words[i] + "%"
+
+		if i == 0 {
+			query.Where("first_name ILIKE ? OR last_name ILIKE ? OR middle_name ILIKE ?", likeword, likeword, likeword)
+		} else {
+			query.Or("first_name ILIKE ? OR last_name ILIKE ? OR middle_name ILIKE ?", likeword, likeword, likeword)
+		}
+		if middleware.IsInteger(words[i]) {
+			id, _ := strconv.Atoi(words[i])
+			query.Or("id = ?", id)
+		}
+	}
+	err := query.Find(&profiles).Limit(searchData.Count).Error
+	return profiles, err
 }
 
 func GetAllProfileIDAndNames() ([]Profiles, error) {

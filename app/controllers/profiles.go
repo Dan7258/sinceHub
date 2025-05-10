@@ -470,6 +470,27 @@ func (p Profiles) GetAllProfiles() revel.Result {
 	return p.RenderJSON(profiles)
 }
 
+func (p Profiles) GetAuthorsPaginator() revel.Result {
+	_, err := middleware.ValidateJWT(p.Request, "auth_token")
+	if err != nil {
+		//p.Response.Status = http.StatusUnauthorized
+		return p.Redirect("/login")
+	}
+	searchData := new(models.SearchDataForProfiles)
+	err = p.Params.BindJSON(&searchData)
+	if err != nil {
+		p.Response.Status = http.StatusBadRequest
+		return p.RenderJSON(map[string]string{"error": err.Error()})
+	}
+	profiles, err := models.GetAuthorsWithSearchParams(*searchData)
+	if err != nil {
+		p.Response.Status = http.StatusInternalServerError
+		return p.RenderJSON(map[string]string{"error": err.Error()})
+	}
+	p.Response.Status = http.StatusOK
+	return p.RenderJSON(profiles)
+}
+
 func (p Profiles) GetMySubscribersList() revel.Result {
 	userID, err := middleware.ValidateJWT(p.Request, "auth_token")
 	if err != nil {

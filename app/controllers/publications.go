@@ -287,7 +287,7 @@ func (p Publications) GetPublicationsData() revel.Result {
 }
 
 func (p Publications) GetPublicationsPaginator() revel.Result {
-	searchData := new(models.SearchData)
+	searchData := new(models.SearchDataForPublications)
 	err := p.Params.BindJSON(searchData)
 	if err != nil {
 		p.Response.Status = http.StatusUnprocessableEntity

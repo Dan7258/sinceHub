@@ -24,7 +24,7 @@ type Paginator struct {
 	Count   int `json:"count"`
 }
 
-type SearchData struct {
+type SearchDataForPublications struct {
 	Title string   `json:"title"`
 	Tags  []uint64 `json:"tags"`
 	Paginator
@@ -123,7 +123,7 @@ func GetPublicationsByID(idList []uint64) ([]Publications, error) {
 	return publications, result.Error
 }
 
-func GetPublicationsWithSearchParams(data SearchData) ([]Publications, error) {
+func GetPublicationsWithSearchParams(data SearchDataForPublications) ([]Publications, error) {
 	publications := make([]Publications, 0)
 	query := DB.Model(new(Publications)).Distinct("publications.*").
 		Preload("Tags").

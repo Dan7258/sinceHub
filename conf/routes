@@ -50,11 +50,11 @@ DELETE  /unsubscribe/:id                            Profiles.DeleteSubscriberFro
 PATCH   /profiles                                   Profiles.UpdateProfileByID
 
 GET     /authors                                    Profiles.ShowAuthorsPage
-GET     /get-authors-data                           Profiles.GetAllProfiles
 GET     /subscribers                                Profiles.ShowMySubscribers
 GET     /subscribes                                 Profiles.ShowMySubscribes
 GET     /get-subscribers-data                       Profiles.GetMySubscribersList
 GET     /get-subscribes-data                        Profiles.GetMySubscribesList
+POST    /get-authors-paginator                      Profiles.GetAuthorsPaginator
 
 GET     /admin                                      Admins.ShowAdminPage
 GET     /login-admin                                Admins.ShowLoginAdminPage

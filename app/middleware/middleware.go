@@ -8,6 +8,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 )
 
@@ -124,4 +125,9 @@ func SetCookieData(ctrl *revel.Controller, cookieName, cookieValue string, remov
 func HashPassword(password string) (string, error) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	return string(bytes), err
+}
+
+func IsInteger(stroke string) bool {
+	_, err := strconv.Atoi(stroke)
+	return err == nil
 }
